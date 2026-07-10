@@ -4,7 +4,7 @@ import urllib.parse
 import datetime
 
 # App configuratie
-st.set_page_config(page_title="Festival Vrienden Planner", page_icon="⛺", layout="wide")
+st.set_page_config(page_title="Liquicity Festival Planner 2026", page_icon="🚀", layout="wide")
 st.title("⛺ De Ultieme Festival Weekend Planner")
 st.write("Jouw vriendengroep festival-proof geautomatiseerd: line-up, kosten, paklijst en Uber.")
 
