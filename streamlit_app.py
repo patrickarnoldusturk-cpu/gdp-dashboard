@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import urllib.request
 import urllib.parse
 import json
 import datetime
@@ -9,51 +8,46 @@ import re
 # App configuratie
 st.set_page_config(page_title="Liquicity Festival Planner 2026", page_icon="🚀", layout="wide")
 st.title("🚀 De Ultieme Liquicity Festival Planner")
-st.write("Jouw vriendengroep live en automatisch gesynchroniseerd in de cloud.")
+st.write("Automatische synchronisatie via de website-link. Sla op en deel de URL met je vrienden!")
 
 # ==========================================
-# 🌐 AUTOMATISCHE CLOUD-SYNCHRONISATIE
+# 🌐 URL INTERACTIEF GEHEUGEN (CRASHVRIJ)
 # ==========================================
-# Dit is de unieke online sleutel voor de groepsdatabase van Patrick
-CLOUD_URL = "https://kvdb.io"
-
-def laad_data_uit_cloud():
-    try:
-        req = urllib.request.Request(CLOUD_URL, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=5) as response:
-            return json.loads(response.read().decode())
-    except Exception:
-        # Als de cloud nog leeg is, starten we met deze standaardwaarden
-        return {
-            "vrienden": ["Patrick", "Annika", "Harland", "Richard", "Dirk", "Van Brakel"],
-            "datums": {},
-            "uitgaven": [],
-            "timetable": {},
-            "paklijst": [
-                {"Item": "Partytent", "Wie": "Niemand", "Ingepakt": False},
-                {"Item": "Koelbox + Koelementen", "Wie": "Niemand", "Ingepakt": False},
-                {"Item": "Bluetooth Speaker", "Wie": "Niemand", "Ingepakt": False},
-                {"Item": "Ducttape", "Wie": "Niemand", "Ingepakt": False},
-                {"Item": "Kaartspel / Drankspellen", "Wie": "Niemand", "Ingepakt": False}
-            ]
-        }
-
-def sla_data_in_cloud(data):
-    try:
-        req = urllib.request.Request(
-            CLOUD_URL, 
-            data=json.dumps(data).encode('utf-8'),
-            headers={'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0'},
-            method='PUT'
-        )
-        with urllib.request.urlopen(req, timeout=5) as response:
+def laad_data_uit_url():
+    # Haal de parameters uit de internetbalk
+    params = st.query_params
+    if "data" in params:
+        try:
+            # Ontcijfer de gecodeerde tekst uit de link
+            gecomprimeerde_data = params["data"]
+            return json.loads(urllib.parse.unquote(gecomprimeerde_data))
+        except Exception:
             pass
-    except Exception:
-        pass
+    
+    # Standaard startwaarden als de link nieuw is
+    return {
+        "vrienden": ["Patrick", "Annika", "Harland", "Richard", "Dirk", "Van Brakel"],
+        "datums": {},
+        "uitgaven": [],
+        "timetable": {},
+        "paklijst": [
+            {"Item": "Partytent", "Wie": "Niemand", "Ingepakt": False},
+            {"Item": "Koelbox + Koelementen", "Wie": "Niemand", "Ingepakt": False},
+            {"Item": "Bluetooth Speaker", "Wie": "Niemand", "Ingepakt": False},
+            {"Item": "Ducttape", "Wie": "Niemand", "Ingepakt": False},
+            {"Item": "Kaartspel / Drankspellen", "Wie": "Niemand", "Ingepakt": False}
+        ]
+    }
 
-# Altijd de meest actuele stand ophalen - NU MET DE JUISTE FUNCTIENAAM (laad_data_uit_cloud)
-if 'groeps_data' not in st.session_state or st.session_state.groeps_data is None:
-    st.session_state.groeps_data = laad_data_uit_cloud()
+def update_url_link(data):
+    # Sla de data direct op in de browserbalk van de gebruiker
+    json_tekst = json.dumps(data)
+    gecodeerde_tekst = urllib.parse.quote(json_tekst)
+    st.query_params["data"] = gecodeerde_tekst
+
+# Initialiseer de data
+if 'groeps_data' not in st.session_state:
+    st.session_state.groeps_data = laad_data_uit_url()
 
 g_data = st.session_state.groeps_data
 
@@ -65,24 +59,21 @@ if st.sidebar.button("➕ Voeg mij toe aan de groep"):
         s_naam = nieuwe_naam.strip()
         if s_naam not in g_data["vrienden"]:
             g_data["vrienden"].append(s_naam)
-            sla_data_in_cloud(g_data)
-            st.sidebar.success(f"{s_naam} is toegevoegd!")
+            update_url_link(g_data)
+            st.sidebar.success(f"{s_naam} is toegevoegd! Kopieer de nieuwe link bovenin je browser!")
             st.rerun()
         else:
             st.sidebar.warning("Deze naam staat al in de lijst!")
 
 st.sidebar.write("**Huidige groep:**", ", ".join(g_data["vrienden"]))
 st.sidebar.write("---")
-if st.sidebar.button("🔄 Forceer Live Refresh"):
-    st.session_state.groeps_data = laad_data_uit_cloud() # GECORRIGEERD NAAR UIT_CLOUD
-    st.rerun()
+st.sidebar.info("🔗 **Tip:** Als je klaar bent met invullen, kopieer dan de complete link bovenin je internetbrowser en stuur deze naar de groepsapp!")
 
 # --- TABS MAPS ---
 tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "🗓️ Welk Festival/Weekend?", "💶 Tickets & Spullen Kosten", "🎵 Timetable / Line-up", 
     "🧳 Groeps-Paklijst", "🚗 Uber naar Festival", "📸 Google Foto's", "🎵 Groeps-Playlist"
 ])
-
 # ==========================================
 # TAB 1: DATUMS / FESTIVALS PRIKKEN
 # ==========================================
@@ -96,8 +87,8 @@ with tab1:
         gekozen_datums = st.multiselect("Welke festivals/weekenden kun jij?", opties, default=g_data["datums"].get(naam, []))
         if st.button("Voorkeur Opslaan"):
             g_data["datums"][naam] = gekozen_datums
-            sla_data_in_cloud(g_data)
-            st.success("Voorkeuren opgeslagen in de cloud!")
+            update_url_link(g_data)
+            st.success("Voorkeuren opgeslagen in de link!")
             st.rerun()
             
     with col2:
@@ -114,7 +105,7 @@ with tab1:
                 if festivals:
                     st.write(f"• **{p}** heeft gestemd op: {', '.join(festivals)}")
         else:
-            st.info("Nog geen stemmen uitgebracht door de groep.")
+            st.info("Nog geen stemmen uitgebracht.")
 
 # ==========================================
 # TAB 2: KOSTEN VERREKENEN
@@ -130,8 +121,8 @@ with tab2:
         if st.button("Uitgave Toevoegen"):
             if bedrag > 0 and omschrijving:
                 g_data["uitgaven"].append({"Wie": wie_betaalt, "Bedrag": bedrag, "Omschrijving": omschrijving})
-                sla_data_in_cloud(g_data)
-                st.success("Uitgave live opgeslagen!")
+                update_url_link(g_data)
+                st.success("Uitgave opgeslagen!")
                 st.rerun()
 
     with col2:
@@ -161,7 +152,7 @@ with tab2:
             if st.button("🔴 Geselecteerde uitgave wissen"):
                 index_to_delete = int(te_verwijderen.split(":"))
                 g_data["uitgaven"].pop(index_to_delete)
-                sla_data_in_cloud(g_data)
+                update_url_link(g_data)
                 st.success("Uitgave verwijderd!")
                 st.rerun()
         else:
@@ -194,8 +185,8 @@ with tab3:
                     g_data["timetable"][a_naam].append(kiezende_vriend)
                 elif not vinkje and kiezende_vriend in g_data["timetable"][a_naam]:
                     g_data["timetable"][a_naam].remove(kiezende_vriend)
-            sla_data_in_cloud(g_data)
-            st.success("Timetable bijgewerkt in cloud!")
+            update_url_link(g_data)
+            st.success("Timetable opgeslagen!")
             st.rerun()
         for act in liquicity_acts:
             a_naam = act["Artiest"]
@@ -224,7 +215,7 @@ with tab4:
         if st.button("Item aan paklijst toevoegen"):
             if nieuw_item:
                 g_data["paklijst"].append({"Item": nieuw_item, "Wie": "Niemand", "Ingepakt": False})
-                sla_data_in_cloud(g_data)
+                update_url_link(g_data)
                 st.success(f"'{nieuw_item}' opgeslagen!")
                 st.rerun()
     with col2:
@@ -233,8 +224,8 @@ with tab4:
             for i in range(len(g_data["paklijst"])):
                 g_data["paklijst"][i]['Wie'] = st.session_state[f"p_wie_{i}"]
                 g_data["paklijst"][i]['Ingepakt'] = st.session_state[f"p_check_{i}"]
-            sla_data_in_cloud(g_data)
-            st.success("Paklijst in de cloud bijgewerkt!")
+            update_url_link(g_data)
+            st.success("Paklijst opgeslagen!")
             st.rerun()
             
         for i, item in enumerate(g_data["paklijst"]):
