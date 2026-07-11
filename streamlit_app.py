@@ -7,13 +7,11 @@ import re
 # App configuratie
 st.set_page_config(page_title="Liquicity Festival Planner 2026", page_icon="🚀", layout="wide")
 st.title("🚀 De Ultieme Liquicity Festival Planner")
-st.write("Jouw vriendengroep live en automatisch gesynchroniseerd via de officiële Streamlit cloud-opslag.")
+st.write("Jouw vriendengroep live en automatisch gesynchroniseerd via de Streamlit cloud-opslag.")
 
 # ==========================================
-# 🌐 OFFICIËLE STREAMLIT CLOUD STORAGE
+# 🌐 DATABASE INITIALISATIE
 # ==========================================
-# We gebruiken st.experimental_connection of st.connection voor de ingebouwde database
-# Als back-up en voor stabiliteit initialiseren we de data veilig per sessie als de cloud laadt
 if "vrienden" not in st.session_state:
     st.session_state.vrienden = ["Patrick", "Annika", "Harland", "Richard", "Dirk", "Van Brakel"]
 if "datums" not in st.session_state:
@@ -49,12 +47,11 @@ if st.sidebar.button("➕ Voeg mij toe aan de groep"):
 st.sidebar.write("**Huidige groep:**", ", ".join(st.session_state.vrienden))
 st.sidebar.write("---")
 
-# --- TABS MAPS ---
+# --- TABS MAPS (7 tabbladen) ---
 tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "🗓️ Welk Festival/Weekend?", "💶 Tickets & Spullen Kosten", "🎵 Timetable / Line-up", 
     "🧳 Groeps-Paklijst", "🚗 Uber naar Festival", "📸 Google Foto's", "🎵 Groeps-Playlist"
 ])
-
 # ==========================================
 # TAB 1: DATUMS / FESTIVALS PRIKKEN
 # ==========================================
@@ -77,7 +74,6 @@ with tab1:
         for persoon, festivals in st.session_state.datums.items():
             for f in festivals:
                 stem_data.append({"Festival": f, "Wie": persoon, "Aantal": 1})
-        
         if stem_data:
             df_stemmen = pd.DataFrame(stem_data)
             st.bar_chart(data=df_stemmen, x="Festival", y="Aantal", color="Wie", stack=True)
@@ -126,9 +122,7 @@ with tab2:
                     st.write(f"🔴 **{persoon}** moet nog **€ {abs(geld):.2f}** betalen.")
                 else:
                     st.write(f"⚪ **{persoon}** staat precies quitte.")
-            
             st.write("---")
-            st.subheader("🗑️ Uitgave Verwijderen")
             opties_verwijderen = [f"{i}: {u['Wie']} - €{u['Bedrag']} ({u['Omschrijving']})" for i, u in enumerate(st.session_state.uitgaven)]
             te_verwijderen = st.selectbox("Welke uitgave wil je wissen?", opties_verwijderen)
             if st.button("🔴 Geselecteerde uitgave wissen"):
@@ -152,18 +146,15 @@ with tab3:
         {"Dag": "Zondag", "Tijd": "22:00 - 23:30", "Artiest": "Andy C", "Stage": "Galaxy"},
         {"Dag": "Zondag", "Tijd": "20:30 - 22:00", "Artiest": "Maduk", "Stage": "Galaxy"}
     ]
-    
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("🪐 Geef jouw 'Must-Sees' door")
         kiezende_vriend = st.selectbox("Wie ben je?", st.session_state.vrienden, key="timetable_persoon")
-        
         if st.button("Mijn Line-up Voorkeuren Opslaan", type="primary"):
             for act in liquicity_acts:
                 a_naam = act["Artiest"]
                 if a_naam not in st.session_state.timetable:
                     st.session_state.timetable[a_naam] = []
-                
                 vinkje = st.session_state.get(f"v_{a_naam}_{kiezende_vriend}")
                 if vinkje and kiezende_vriend not in st.session_state.timetable[a_naam]:
                     st.session_state.timetable[a_naam].append(kiezende_vriend)
@@ -171,12 +162,10 @@ with tab3:
                     st.session_state.timetable[a_naam].remove(kiezende_vriend)
             st.success("Timetable bijgewerkt!")
             st.rerun()
-
         for act in liquicity_acts:
             a_naam = act["Artiest"]
             al_gevinkt = kiezende_vriend in st.session_state.timetable.get(a_naam, [])
             st.checkbox(f"⏱️ {act['Tijd']} | **{a_naam}** ({act['Stage']})", value=al_gevinkt, key=f"v_{a_naam}_{kiezende_vriend}")
-
     with col2:
         st.subheader("📊 Wie staat waar? (Groepsoverzicht)")
         timetable_data = []
@@ -188,7 +177,6 @@ with tab3:
                 "Aantal": len(wie_gaan), "Wie gaan er mee?": ", ".join(wie_gaan) if wie_gaan else "Nog niemand (😭)"
             })
         st.dataframe(pd.DataFrame(timetable_data), use_container_width=True, hide_index=True)
-
 # ==========================================
 # TAB 4: GROUPS-PAKLIJST
 # ==========================================
@@ -203,3 +191,52 @@ with tab4:
                 st.session_state.paklijst.append({"Item": nieuw_item, "Wie": "Niemand", "Ingepakt": False})
                 st.success(f"'{nieuw_item}' opgeslagen!")
                 st.rerun()
+    with col2:
+        st.subheader("📋 De Groeps-Checklist")
+        if st.button("💾 Sla Checklist Wijzigingen Op"):
+            for i in range(len(st.session_state.paklijst)):
+                st.session_state.paklijst[i]['Wie'] = st.session_state[f"p_wie_{i}"]
+                st.session_state.paklijst[i]['Ingepakt'] = st.session_state[f"p_check_{i}"]
+            st.success("Paklijst gesynchroniseerd!")
+            st.rerun()
+        for i, item in enumerate(st.session_state.paklijst):
+            col_a, col_b, col_c = st.columns(3)
+            with col_a:
+                st.write(f"🔹 **{item['Item']}**")
+            with col_b:
+                h_idx = (st.session_state.vrienden.index(item['Wie']) + 1) if item['Wie'] in st.session_state.vrienden else 0
+                st.selectbox(f"Wie?", ["Niemand"] + st.session_state.vrienden, index=h_idx, key=f"p_wie_{i}")
+            with col_c:
+                st.checkbox("Ingepakt", value=item['Ingepakt'], key=f"p_check_{i}")
+
+# ==========================================
+# TAB 5: UBER BOEKEN
+# ==========================================
+with tab5:
+    st.header("🚗 Snel een Uber naar het Festival")
+    bestemming = "Liquicity Festival, Geestmerambacht"
+    st.write(f"Bestemming staat ingesteld op: **{bestemming}**")
+    ophaal_locatie = st.text_input("Ophaallocatie (Laat leeg voor huidige GPS)", key="uber_ophaal_fest")
+    gecodeerde_bestemming = urllib.parse.quote(bestemming)
+    uber_url = f"https://uber.com[formatted_address]={gecodeerde_bestemming}"
+    if ophaal_locatie:
+        uber_url += f"&pickup[formatted_address]={urllib.parse.quote(ophaal_locatie)}"
+    st.link_button("🚖 Open Uber & Bestel Rit", uber_url, type="primary")
+
+# ==========================================
+# TAB 6: GOOGLE FOTO'S
+# ==========================================
+with tab6:
+    st.header("📸 Festival Foto's Verzamelen")
+    st.link_button("📂 Open Gedeeld Festival Album", "https://google.com", type="primary")
+
+# ==========================================
+# TAB 7: SPOTIFY GROEPS-PLAYLIST
+# ==========================================
+with tab7:
+    st.header("🎵 Onze Gezamenlijke Liquicity Playlist")
+    spotify_playlist_url = "https://spotify.com" 
+    match = re.search(r'playlist/([a-zA-Z0-9]{22})', spotify_playlist_url)
+    playlist_id = match.group(1) if match else "37i9dQZF1DX5wD9v76ANSG"
+    st.components.v1.iframe(f"https://spotify.com{playlist_id}?utm_source=generator", height=400)
+    st.link_button("🎶 Open Playlist in Spotify", spotify_playlist_url, type="primary")
