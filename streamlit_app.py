@@ -44,15 +44,15 @@ def sla_data_in_cloud(data):
             CLOUD_URL, 
             data=json.dumps(data).encode('utf-8'),
             headers={'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0'},
-            method='PUT' # PUT is kogelvrij voor deze database
+            method='PUT'
         )
         with urllib.request.urlopen(req, timeout=5) as response:
             pass
     except Exception:
         pass
 
-# Altijd de meest actuele stand ophalen
-if 'groeps_data' not in st.session_state:
+# Altijd de meest actuele stand ophalen - NU MET DE JUISTE FUNCTIENAAM (laad_data_uit_cloud)
+if 'groeps_data' not in st.session_state or st.session_state.groeps_data is None:
     st.session_state.groeps_data = laad_data_uit_cloud()
 
 g_data = st.session_state.groeps_data
@@ -74,7 +74,7 @@ if st.sidebar.button("➕ Voeg mij toe aan de groep"):
 st.sidebar.write("**Huidige groep:**", ", ".join(g_data["vrienden"]))
 st.sidebar.write("---")
 if st.sidebar.button("🔄 Forceer Live Refresh"):
-    st.session_state.groeps_data = laad_data_out_cloud()
+    st.session_state.groeps_data = laad_data_uit_cloud() # GECORRIGEERD NAAR UIT_CLOUD
     st.rerun()
 
 # --- TABS MAPS ---
@@ -82,6 +82,7 @@ tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "🗓️ Welk Festival/Weekend?", "💶 Tickets & Spullen Kosten", "🎵 Timetable / Line-up", 
     "🧳 Groeps-Paklijst", "🚗 Uber naar Festival", "📸 Google Foto's", "🎵 Groeps-Playlist"
 ])
+
 # ==========================================
 # TAB 1: DATUMS / FESTIVALS PRIKKEN
 # ==========================================
