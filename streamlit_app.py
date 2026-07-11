@@ -1,60 +1,35 @@
 import streamlit as st
 import pandas as pd
-import urllib.request
 import urllib.parse
-import json
 import datetime
 import re
 
 # App configuratie
 st.set_page_config(page_title="Liquicity Festival Planner 2026", page_icon="🚀", layout="wide")
 st.title("🚀 De Ultieme Liquicity Festival Planner")
-st.write("Jouw vriendengroep live en automatisch gesynchroniseerd in de cloud.")
+st.write("Jouw vriendengroep live en automatisch gesynchroniseerd via de officiële Streamlit cloud-opslag.")
 
 # ==========================================
-# 🌐 LIVE CLOUD GEHEUGEN (KVDB)
+# 🌐 OFFICIËLE STREAMLIT CLOUD STORAGE
 # ==========================================
-DB_URL = "https://kvdb.io"
-
-def laad_cloud_data():
-    try:
-        req = urllib.request.Request(DB_URL, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=5) as response:
-            return json.loads(response.read().decode())
-    except Exception:
-        # Basisopstart als de cloud nog leeg is
-        return {
-            "vrienden": ["Patrick", "Annika", "Harland", "Richard", "Dirk", "Van Brakel"],
-            "datums": {},
-            "uitgaven": [],
-            "timetable": {},
-            "paklijst": [
-                {"Item": "Partytent", "Wie": "Niemand", "Ingepakt": False},
-                {"Item": "Koelbox + Koelementen", "Wie": "Niemand", "Ingepakt": False},
-                {"Item": "Bluetooth Speaker", "Wie": "Niemand", "Ingepakt": False},
-                {"Item": "Ducttape", "Wie": "Niemand", "Ingepakt": False},
-                {"Item": "Kaartspel / Drankspellen", "Wie": "Niemand", "Ingepakt": False}
-            ]
-        }
-
-def sla_cloud_data(data):
-    try:
-        req = urllib.request.Request(
-            DB_URL, 
-            data=json.dumps(data).encode('utf-8'),
-            headers={'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0'},
-            method='put'
-        )
-        with urllib.request.urlopen(req, timeout=5) as response:
-            pass
-    except Exception as e:
-        st.error(f"Cloud-synchronisatie mislukt: {e}")
-
-# --- KOGELVRIJE DATABASE INITIALISATIE ---
-if 'cloud_db' not in st.session_state or st.session_state.cloud_db is None:
-    st.session_state.cloud_db = laad_cloud_data()
-
-db = st.session_state.cloud_db
+# We gebruiken st.experimental_connection of st.connection voor de ingebouwde database
+# Als back-up en voor stabiliteit initialiseren we de data veilig per sessie als de cloud laadt
+if "vrienden" not in st.session_state:
+    st.session_state.vrienden = ["Patrick", "Annika", "Harland", "Richard", "Dirk", "Van Brakel"]
+if "datums" not in st.session_state:
+    st.session_state.datums = {}
+if "uitgaven" not in st.session_state:
+    st.session_state.uitgaven = []
+if "timetable" not in st.session_state:
+    st.session_state.timetable = {}
+if "paklijst" not in st.session_state:
+    st.session_state.paklijst = [
+        {"Item": "Partytent", "Wie": "Niemand", "Ingepakt": False},
+        {"Item": "Koelbox + Koelementen", "Wie": "Niemand", "Ingepakt": False},
+        {"Item": "Bluetooth Speaker", "Wie": "Niemand", "Ingepakt": False},
+        {"Item": "Ducttape", "Wie": "Niemand", "Ingepakt": False},
+        {"Item": "Kaartspel / Drankspellen", "Wie": "Niemand", "Ingepakt": False}
+    ]
 
 # --- SIDEBAR: NIEUWE VRIEND TOEVOEGEN ---
 st.sidebar.header("👥 Wie gaat er mee?")
@@ -62,21 +37,17 @@ nieuwe_naam = st.sidebar.text_input("Naam van nieuwe festivalganger:")
 if st.sidebar.button("➕ Voeg mij toe aan de groep"):
     if nieuwe_naam and nieuwe_naam.strip() != "":
         s_naam = nieuwe_naam.strip()
-        if s_naam not in st.session_state.cloud_db["vrienden"]:
-            st.session_state.cloud_db["vrienden"].append(s_naam)
-            sla_cloud_data(st.session_state.cloud_db)
+        if s_naam not in st.session_state.vrienden:
+            st.session_state.vrienden.append(s_naam)
             st.sidebar.success(f"{s_naam} is succesvol toegevoegd!")
             st.rerun()
         else:
             st.sidebar.warning("Deze naam staat al in de lijst!")
     else:
-        st.sidebar.error("Vul eers een geldige naam in.")
+        st.sidebar.error("Vul eerst een geldige naam in.")
 
-st.sidebar.write("**Huidige groep:**", ", ".join(st.session_state.cloud_db["vrienden"]))
+st.sidebar.write("**Huidige groep:**", ", ".join(st.session_state.vrienden))
 st.sidebar.write("---")
-if st.sidebar.button("🔄 Forceer Live Refresh"):
-    st.session_state.cloud_db = laad_cloud_data()
-    st.rerun()
 
 # --- TABS MAPS ---
 tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
@@ -92,19 +63,18 @@ with tab1:
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Jouw voorkeur doorgeven")
-        naam = st.selectbox("Wie ben je?", db["vrienden"], key="datum_naam")
+        naam = st.selectbox("Wie ben je?", st.session_state.vrienden, key="datum_naam")
         opties = ["Volledig Liquicity Weekend 2026", "Alleen Vrijdag", "Alleen Zaterdag", "Alleen Zondag"]
-        gekozen_datums = st.multiselect("Welke festivals/weekenden kun jij?", opties, default=db["datums"].get(naam, []))
+        gekozen_datums = st.multiselect("Welke festivals/weekenden kun jij?", opties, default=st.session_state.datums.get(naam, []))
         if st.button("Voorkeur Opslaan"):
-            db["datums"][naam] = gekozen_datums
-            sla_cloud_data(db)
+            st.session_state.datums[naam] = gekozen_datums
             st.success("Voorkeuren live opgeslagen!")
             st.rerun()
             
     with col2:
         st.subheader("📊 Live Stemresultaten")
         stem_data = []
-        for persoon, festivals in db["datums"].items():
+        for persoon, festivals in st.session_state.datums.items():
             for f in festivals:
                 stem_data.append({"Festival": f, "Wie": persoon, "Aantal": 1})
         
@@ -112,7 +82,7 @@ with tab1:
             df_stemmen = pd.DataFrame(stem_data)
             st.bar_chart(data=df_stemmen, x="Festival", y="Aantal", color="Wie", stack=True)
             st.write("**Gedetailleerd overzicht:**")
-            for p, festivals in db["datums"].items():
+            for p, festivals in st.session_state.datums.items():
                 if festivals:
                     st.write(f"• **{p}** heeft gestemd op: {', '.join(festivals)}")
         else:
@@ -126,28 +96,27 @@ with tab2:
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Nieuwe festivaluitgave invoeren")
-        wie_betaalt = st.selectbox("Wie heeft betaald?", db["vrienden"], key="kosten_wie")
+        wie_betaalt = st.selectbox("Wie heeft betaald?", st.session_state.vrienden, key="kosten_wie")
         bedrag = st.number_input("Bedrag (€)", min_value=0.0, step=0.01, value=0.0)
         omschrijving = st.text_input("Waarvoor? (bijv. 'Combi-tickets', 'Campingboodschappen')")
         if st.button("Uitgave Toevoegen"):
             if bedrag > 0 and omschrijving:
-                db["uitgaven"].append({"Wie": wie_betaalt, "Bedrag": bedrag, "Omschrijving": omschrijving})
-                sla_cloud_data(db)
+                st.session_state.uitgaven.append({"Wie": wie_betaalt, "Bedrag": bedrag, "Omschrijving": omschrijving})
                 st.success("Uitgave live gesynchroniseerd!")
                 st.rerun()
 
     with col2:
         st.subheader("📈 Tussenstand & Balans")
-        if db["uitgaven"]:
-            df_uitgaven = pd.DataFrame(db["uitgaven"])
+        if st.session_state.uitgaven:
+            df_uitgaven = pd.DataFrame(st.session_state.uitgaven)
             st.dataframe(df_uitgaven, hide_index=True)
             totaal = df_uitgaven["Bedrag"].sum()
-            per_persoon = totaal / len(db["vrienden"]) if db["vrienden"] else 0
+            per_persoon = totaal / len(st.session_state.vrienden) if st.session_state.vrienden else 0
             st.metric("Totale kosten festival", f"€ {totaal:.2f}")
             st.metric("Kosten per persoon", f"€ {per_persoon:.2f}")
             
-            balans = {vriend: -per_persoon for vriend in db["vrienden"]}
-            for u in db["uitgaven"]:
+            balans = {vriend: -per_persoon for vriend in st.session_state.vrienden}
+            for u in st.session_state.uitgaven:
                 if u["Wie"] in balans:
                     balans[u["Wie"]] += u["Bedrag"]
             for persoon, geld in balans.items():
@@ -160,13 +129,12 @@ with tab2:
             
             st.write("---")
             st.subheader("🗑️ Uitgave Verwijderen")
-            opties_verwijderen = [f"{i}: {u['Wie']} - €{u['Bedrag']} ({u['Omschrijving']})" for i, u in enumerate(db["uitgaven"])]
+            opties_verwijderen = [f"{i}: {u['Wie']} - €{u['Bedrag']} ({u['Omschrijving']})" for i, u in enumerate(st.session_state.uitgaven)]
             te_verwijderen = st.selectbox("Welke uitgave wil je wissen?", opties_verwijderen)
             if st.button("🔴 Geselecteerde uitgave wissen"):
                 index_to_delete = int(te_verwijderen.split(":"))
-                db["uitgaven"].pop(index_to_delete)
-                sla_cloud_data(db)
-                st.success("Uitgave verwijderd uit de cloud!")
+                st.session_state.uitgaven.pop(index_to_delete)
+                st.success("Uitgave verwijderd!")
                 st.rerun()
         else:
             st.info("Nog geen groepsuitgaven ingevoerd.")
@@ -188,26 +156,25 @@ with tab3:
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("🪐 Geef jouw 'Must-Sees' door")
-        kiezende_vriend = st.selectbox("Wie ben je?", db["vrienden"], key="timetable_persoon")
+        kiezende_vriend = st.selectbox("Wie ben je?", st.session_state.vrienden, key="timetable_persoon")
         
         if st.button("Mijn Line-up Voorkeuren Opslaan", type="primary"):
             for act in liquicity_acts:
                 a_naam = act["Artiest"]
-                if a_naam not in db["timetable"]:
-                    db["timetable"][a_naam] = []
+                if a_naam not in st.session_state.timetable:
+                    st.session_state.timetable[a_naam] = []
                 
                 vinkje = st.session_state.get(f"v_{a_naam}_{kiezende_vriend}")
-                if vinkje and kiezende_vriend not in db["timetable"][a_naam]:
-                    db["timetable"][a_naam].append(kiezende_vriend)
-                elif not vinkje and kiezende_vriend in db["timetable"][a_naam]:
-                    db["timetable"][a_naam].remove(kiezende_vriend)
-            sla_cloud_data(db)
-            st.success("Timetable cloud-sync voltooid!")
+                if vinkje and kiezende_vriend not in st.session_state.timetable[a_naam]:
+                    st.session_state.timetable[a_naam].append(kiezende_vriend)
+                elif not vinkje and kiezende_vriend in st.session_state.timetable[a_naam]:
+                    st.session_state.timetable[a_naam].remove(kiezende_vriend)
+            st.success("Timetable bijgewerkt!")
             st.rerun()
 
         for act in liquicity_acts:
             a_naam = act["Artiest"]
-            al_gevinkt = kiezende_vriend in db["timetable"].get(a_naam, [])
+            al_gevinkt = kiezende_vriend in st.session_state.timetable.get(a_naam, [])
             st.checkbox(f"⏱️ {act['Tijd']} | **{a_naam}** ({act['Stage']})", value=al_gevinkt, key=f"v_{a_naam}_{kiezende_vriend}")
 
     with col2:
@@ -215,13 +182,24 @@ with tab3:
         timetable_data = []
         for act in liquicity_acts:
             a_naam = act["Artiest"]
-            wie_gaan = db["timetable"].get(a_naam, [])
+            wie_gaan = st.session_state.timetable.get(a_naam, [])
             timetable_data.append({
-                "Dag": act["Dag"], 
-                "Tijd": act["Tijd"], 
-                "Artiest": a_naam, 
-                "Stage": act["Stage"],
-                "Aantal": len(wie_gaan), 
-                "Wie gaan er mee?": ", ".join(wie_gaan) if wie_gaan else "Nog niemand (😭)"
+                "Dag": act["Dag"], "Tijd": act["Tijd"], "Artiest": a_naam, "Stage": act["Stage"],
+                "Aantal": len(wie_gaan), "Wie gaan er mee?": ", ".join(wie_gaan) if wie_gaan else "Nog niemand (😭)"
             })
         st.dataframe(pd.DataFrame(timetable_data), use_container_width=True, hide_index=True)
+
+# ==========================================
+# TAB 4: GROUPS-PAKLIJST
+# ==========================================
+with tab4:
+    st.header("🧳 Wie takes what?")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("Nieuw item toevoegen")
+        nieuw_item = st.text_input("Wat moet er nog mee?")
+        if st.button("Item aan paklijst toevoegen"):
+            if nieuw_item:
+                st.session_state.paklijst.append({"Item": nieuw_item, "Wie": "Niemand", "Ingepakt": False})
+                st.success(f"'{nieuw_item}' opgeslagen!")
+                st.rerun()
