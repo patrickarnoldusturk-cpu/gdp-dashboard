@@ -2,56 +2,53 @@ import streamlit as st
 import pandas as pd
 import urllib.parse
 import json
-import datetime
-import re
+import base64
 
 # App configuratie
 st.set_page_config(page_title="Liquicity Festival Planner 2026", page_icon="🚀", layout="wide")
 st.title("🚀 De Ultieme Liquicity Festival Planner")
-st.write("Automatische synchronisatie via de website-link. Sla op en deel de URL met je vrienden!")
+st.write("Plan jullie festivalweekend kogelvrij en crashvrij!")
 
 # ==========================================
-# 🌐 URL INTERACTIEF GEHEUGEN (CRASHVRIJ)
+# 🔐 SYNC VIA TEXT-CODE (100% STABIEL)
 # ==========================================
-def laad_data_uit_url():
-    # Haal de parameters uit de internetbalk
-    params = st.query_params
-    if "data" in params:
-        try:
-            # Ontcijfer de gecodeerde tekst uit de link
-            gecomprimeerde_data = params["data"]
-            return json.loads(urllib.parse.unquote(gecomprimeerde_data))
-        except Exception:
-            pass
-    
-    # Standaard startwaarden als de link nieuw is
-    return {
-        "vrienden": ["Patrick", "Annika", "Harland", "Richard", "Dirk", "Van Brakel"],
-        "datums": {},
-        "uitgaven": [],
-        "timetable": {},
-        "paklijst": [
-            {"Item": "Partytent", "Wie": "Niemand", "Ingepakt": False},
-            {"Item": "Koelbox + Koelementen", "Wie": "Niemand", "Ingepakt": False},
-            {"Item": "Bluetooth Speaker", "Wie": "Niemand", "Ingepakt": False},
-            {"Item": "Ducttape", "Wie": "Niemand", "Ingepakt": False},
-            {"Item": "Kaartspel / Drankspellen", "Wie": "Niemand", "Ingepakt": False}
-        ]
-    }
+# Standaard startwaarden
+standaard_data = {
+    "vrienden": ["Patrick", "Annika", "Harland", "Richard", "Dirk", "Van Brakel"],
+    "datums": {},
+    "uitgaven": [],
+    "timetable": {},
+    "paklijst": [
+        {"Item": "Partytent", "Wie": "Niemand", "Ingepakt": False},
+        {"Item": "Koelbox + Koelementen", "Wie": "Niemand", "Ingepakt": False},
+        {"Item": "Bluetooth Speaker", "Wie": "Niemand", "Ingepakt": False},
+        {"Item": "Ducttape", "Wie": "Niemand", "Ingepakt": False},
+        {"Item": "Kaartspel / Drankspellen", "Wie": "Niemand", "Ingepakt": False}
+    ]
+}
 
-def update_url_link(data):
-    # Sla de data direct op in de browserbalk van de gebruiker
-    json_tekst = json.dumps(data)
-    gecodeerde_tekst = urllib.parse.quote(json_tekst)
-    st.query_params["data"] = gecodeerde_tekst
-
-# Initialiseer de data
 if 'groeps_data' not in st.session_state:
-    st.session_state.groeps_data = laad_data_uit_url()
+    st.session_state.groeps_data = standaard_data.copy()
 
 g_data = st.session_state.groeps_data
 
-# --- SIDEBAR: NIEUWE VRIEND TOEVOEGEN ---
+# --- SIDEBAR: INTERACTIEVE HUB ---
+st.sidebar.header("🔄 Groeps-Synchronisatie")
+st.sidebar.write("Deel data met je vrienden zonder database-crashes!")
+
+# Synchronisatie-invoer
+import_code = st.sidebar.text_area("Plak hier de code van je vrienden om te updaten:")
+if st.sidebar.button("📥 Importeer Groepsdata"):
+    if import_code:
+        try:
+            gedecodeerd = base64.b64decode(import_code.strip()).decode('utf-8')
+            st.session_state.groeps_data = json.loads(gedecodeerd)
+            st.sidebar.success("Groepsdata succesvol bijgewerkt!")
+            st.rerun()
+        except Exception:
+            st.sidebar.error("Ongeldige code! Zorg dat je de hele code kopieert.")
+
+st.sidebar.write("---")
 st.sidebar.header("👥 Wie gaat er mee?")
 nieuwe_naam = st.sidebar.text_input("Naam van nieuwe festivalganger:")
 if st.sidebar.button("➕ Voeg mij toe aan de groep"):
@@ -59,21 +56,18 @@ if st.sidebar.button("➕ Voeg mij toe aan de groep"):
         s_naam = nieuwe_naam.strip()
         if s_naam not in g_data["vrienden"]:
             g_data["vrienden"].append(s_naam)
-            update_url_link(g_data)
-            st.sidebar.success(f"{s_naam} is toegevoegd! Kopieer de nieuwe link bovenin je browser!")
+            st.sidebar.success(f"{s_naam} toegevoegd!")
             st.rerun()
         else:
             st.sidebar.warning("Deze naam staat al in de lijst!")
 
 st.sidebar.write("**Huidige groep:**", ", ".join(g_data["vrienden"]))
-st.sidebar.write("---")
-st.sidebar.info("🔗 **Tip:** Als je klaar bent met invullen, kopieer dan de complete link bovenin je internetbrowser en stuur deze naar de groepsapp!")
-
 # --- TABS MAPS ---
 tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "🗓️ Welk Festival/Weekend?", "💶 Tickets & Spullen Kosten", "🎵 Timetable / Line-up", 
     "🧳 Groeps-Paklijst", "🚗 Uber naar Festival", "📸 Google Foto's", "🎵 Groeps-Playlist"
 ])
+
 # ==========================================
 # TAB 1: DATUMS / FESTIVALS PRIKKEN
 # ==========================================
@@ -87,8 +81,7 @@ with tab1:
         gekozen_datums = st.multiselect("Welke festivals/weekenden kun jij?", opties, default=g_data["datums"].get(naam, []))
         if st.button("Voorkeur Opslaan"):
             g_data["datums"][naam] = gekozen_datums
-            update_url_link(g_data)
-            st.success("Voorkeuren opgeslagen in de link!")
+            st.success("Voorkeur lokaal opgeslagen!")
             st.rerun()
             
     with col2:
@@ -121,8 +114,7 @@ with tab2:
         if st.button("Uitgave Toevoegen"):
             if bedrag > 0 and omschrijving:
                 g_data["uitgaven"].append({"Wie": wie_betaalt, "Bedrag": bedrag, "Omschrijving": omschrijving})
-                update_url_link(g_data)
-                st.success("Uitgave opgeslagen!")
+                st.success("Uitgave toegevoegd!")
                 st.rerun()
 
     with col2:
@@ -152,7 +144,6 @@ with tab2:
             if st.button("🔴 Geselecteerde uitgave wissen"):
                 index_to_delete = int(te_verwijderen.split(":"))
                 g_data["uitgaven"].pop(index_to_delete)
-                update_url_link(g_data)
                 st.success("Uitgave verwijderd!")
                 st.rerun()
         else:
@@ -185,8 +176,7 @@ with tab3:
                     g_data["timetable"][a_naam].append(kiezende_vriend)
                 elif not vinkje and kiezende_vriend in g_data["timetable"][a_naam]:
                     g_data["timetable"][a_naam].remove(kiezende_vriend)
-            update_url_link(g_data)
-            st.success("Timetable opgeslagen!")
+            st.success("Timetable lokaal bijgewerkt!")
             st.rerun()
         for act in liquicity_acts:
             a_naam = act["Artiest"]
@@ -204,68 +194,42 @@ with tab3:
             })
         st.dataframe(pd.DataFrame(timetable_data), use_container_width=True, hide_index=True)
 # ==========================================
-# TAB 4: GROUPS-PAKLIJST
+# TAB 4 T/M 7: OVERIGE TOOLS
 # ==========================================
 with tab4:
     st.header("🧳 Wie takes what?")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("Nieuw item toevoegen")
-        nieuw_item = st.text_input("Wat moet er nog mee?")
-        if st.button("Item aan paklijst toevoegen"):
-            if nieuw_item:
-                g_data["paklijst"].append({"Item": nieuw_item, "Wie": "Niemand", "Ingepakt": False})
-                update_url_link(g_data)
-                st.success(f"'{nieuw_item}' opgeslagen!")
-                st.rerun()
-    with col2:
-        st.subheader("📋 De Groeps-Checklist")
-        if st.button("💾 Sla Checklist Wijzigingen Op"):
-            for i in range(len(g_data["paklijst"])):
-                g_data["paklijst"][i]['Wie'] = st.session_state[f"p_wie_{i}"]
-                g_data["paklijst"][i]['Ingepakt'] = st.session_state[f"p_check_{i}"]
-            update_url_link(g_data)
-            st.success("Paklijst opgeslagen!")
-            st.rerun()
-            
-        for i, item in enumerate(g_data["paklijst"]):
-            col_a, col_b, col_c = st.columns(3)
-            with col_a:
-                st.write(f"🔹 **{item['Item']}**")
-            with col_b:
-                h_idx = (g_data["vrienden"].index(item['Wie']) + 1) if item['Wie'] in g_data["vrienden"] else 0
-                st.selectbox(f"Wie?", ["Niemand"] + g_data["vrienden"], index=h_idx, key=f"p_wie_{i}")
-            with col_c:
-                st.checkbox("Ingepakt", value=item['Ingepakt'], key=f"p_check_{i}")
+    if st.button("💾 Sla Checklist Wijzigingen Op"):
+        for i in range(len(g_data["paklijst"])):
+            g_data["paklijst"][i]['Wie'] = st.session_state[f"p_wie_{i}"]
+            g_data["paklijst"][i]['Ingepakt'] = st.session_state[f"p_check_{i}"]
+        st.success("Paklijst lokaal bijgewerkt!")
+        st.rerun()
+    for i, item in enumerate(g_data["paklijst"]):
+        col_a, col_b, col_c = st.columns(3)
+        with col_a: st.write(f"🔹 **{item['Item']}**")
+        with col_b: 
+            h_idx = (g_data["vrienden"].index(item['Wie']) + 1) if item['Wie'] in g_data["vrienden"] else 0
+            st.selectbox(f"Wie?", ["Niemand"] + g_data["vrienden"], index=h_idx, key=f"p_wie_{i}")
+        with col_c: st.checkbox("Ingepakt", value=item['Ingepakt'], key=f"p_check_{i}")
 
-# ==========================================
-# TAB 5: UBER BOEKEN
-# ==========================================
 with tab5:
     st.header("🚗 Snel een Uber naar het Festival")
-    bestemming = "Liquicity Festival, Geestmerambacht"
-    st.write(f"Bestemming staat ingesteld op: **{bestemming}**")
-    ophaal_locatie = st.text_input("Ophaallocatie (Laat leeg voor huidige GPS)", key="uber_ophaal_fest")
-    gecodeerde_bestemming = urllib.parse.quote(bestemming)
-    uber_url = f"https://uber.com[formatted_address]={gecodeerde_bestemming}"
-    if ophaal_locatie:
-        uber_url += f"&pickup[formatted_address]={urllib.parse.quote(ophaal_locatie)}"
-    st.link_button("🚖 Open Uber & Bestel Rit", uber_url, type="primary")
+    st.link_button("🚖 Open Uber & Bestel Rit", "https://uber.com[formatted_address]=Geestmerambacht", type="primary")
 
-# ==========================================
-# TAB 6: GOOGLE FOTO'S
-# ==========================================
 with tab6:
     st.header("📸 Festival Foto's Verzamelen")
     st.link_button("📂 Open Gedeeld Festival Album", "https://google.com", type="primary")
 
-# ==========================================
-# TAB 7: SPOTIFY GROEPS-PLAYLIST
-# ==========================================
 with tab7:
     st.header("🎵 Onze Gezamenlijke Liquicity Playlist")
-    spotify_playlist_url = "https://spotify.com" 
-    match = re.search(r'playlist/([a-zA-Z0-9]{22})', spotify_playlist_url)
-    playlist_id = match.group(1) if match else "37i9dQZF1DX5wD9v76ANSG"
-    st.components.v1.iframe(f"https://spotify.com{playlist_id}?utm_source=generator", height=400)
-    st.link_button("🎶 Open Playlist in Spotify", spotify_playlist_url, type="primary")
+    st.components.v1.iframe("https://spotify.com", height=400)
+
+# ==========================================
+# 📋 GENERATOR ONDERIN VOOR DE DEELLINK
+# ==========================================
+st.write("---")
+st.subheader("📋 Jouw Unieke Groeps-Deelcode")
+st.write("Kopieer deze code en stuur hem naar je vrienden. Zij kunnen deze code in hun eigen zijbalk plakken om jouw wijzigingen te zien!")
+json_bytes = json.dumps(g_data).encode('utf-8')
+deel_code = base64.b64encode(json_bytes).decode('utf-8')
+st.text_area("Kopieer deze code:", value=deel_code, height=100)
