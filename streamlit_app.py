@@ -217,4 +217,11 @@ with tab3:
             a_naam = act["Artiest"]
             wie_gaan = db["timetable"].get(a_naam, [])
             timetable_data.append({
-                "Dag": act["Dag"], "Tijd": act["Tijd"], "Artiest": a_naam, "Stage": act["Stage"],
+                "Dag": act["Dag"], 
+                "Tijd": act["Tijd"], 
+                "Artiest": a_naam, 
+                "Stage": act["Stage"],
+                "Aantal": len(wie_gaan), 
+                "Wie gaan er mee?": ", ".join(wie_gaan) if wie_gaan else "Nog niemand (😭)"
+            })
+        st.dataframe(pd.DataFrame(timetable_data), use_container_width=True, hide_index=True)
