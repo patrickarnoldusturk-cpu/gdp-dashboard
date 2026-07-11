@@ -69,23 +69,26 @@ df_paklijst = haal_data_op("Paklijst", ["Item", "Wie", "Ingepakt"], standaard_pa
 st.sidebar.header("👥 Wie gaat er mee?")
 nieuwe_naam = st.sidebar.text_input("Naam van nieuwe festivalganger:")
 if st.sidebar.button("➕ Voeg mij toe aan de groep"):
-    if nieuwe_naam and nieuwe_naam not in vrienden_lijst:
-        nieuw_row = pd.DataFrame([{"Naam": nieuwe_naam}])
-        df_vrienden = pd.concat([df_vrienden, nieuw_row], ignore_index=True)
-        sla_data_op(df_vrienden, "Vrienden")
-        st.sidebar.success(f"{nieuwe_naam} is toegevoegd!")
-        st.rerun()
-    elif nieuwe_naam in vrienden_lijst:
-        st.sidebar.warning("Deze naam staat al in de lijst!")
+    if nieuwe_naam and nieuwe_naam.strip() != "":
+        s_naam = nieuwe_naam.strip()
+        if s_naam not in st.session_state.cloud_db["vrienden"]:
+            # Voeg direct veilig toe aan het lokale geheugen
+            st.session_state.cloud_db["vrienden"].append(s_naam)
+            # Sla veilig op de achtergrond op in de cloud
+            sla_cloud_data(st.session_state.cloud_db)
+            st.sidebar.success(f"{s_naam} is succesvol toegevoegd!")
+            # Veilige manier van verversen zonder harde crash
+            st.rerun()
+        else:
+            st.sidebar.warning("Deze naam staat al in de lijst!")
+    else:
+        st.sidebar.error("Vul eerst een geldige naam in.")
 
-st.sidebar.write("**Huidige groep:**", ", ".join(vrienden_lijst))
+st.sidebar.write("**Huidige groep:**", ", ".join(st.session_state.cloud_db["vrienden"]))
 st.sidebar.write("---")
-
-# --- TABS MAPS ---
-tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-    "🗓️ Welk Festival/Weekend?", "💶 Tickets & Spullen Kosten", "🎵 Timetable / Line-up", 
-    "🧳 Groeps-Paklijst", "🚗 Uber naar Festival", "📸 Google Foto's", "🎵 Groeps-Playlist"
-])
+if st.sidebar.button("🔄 Forceer Live Refresh"):
+    st.session_state.cloud_db = laad_cloud_data()
+    st.rerun()
 
 # ==========================================
 # TAB 1: DATUMS / FESTIVALS PRIKKEN
