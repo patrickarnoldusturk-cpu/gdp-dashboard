@@ -17,7 +17,6 @@ st.write("Jouw vriendengroep festival-proof geautomatiseerd via Google Sheets cl
 GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/15WF6H64eQKCye-YaSBS1xEDOjCa_MUV8rBCUYNL5E9Y/edit?gid=0#gid=0"
 
 # De verbinding instellen in de geheime instellingen van Streamlit
-st.secrets["connections"] = {"gsheets": {"spreadsheet": GOOGLE_SHEET_URL}}
 
 # Maak verbinding met Google Sheets
 try:
