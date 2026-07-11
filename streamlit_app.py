@@ -53,7 +53,7 @@ def sla_data_in_cloud(data):
 
 # Altijd de meest actuele stand ophalen
 if 'groeps_data' not in st.session_state:
-    st.session_state.groeps_data = laad_data_out_cloud()
+    st.session_state.groeps_data = laad_data_uit_cloud()
 
 g_data = st.session_state.groeps_data
 
