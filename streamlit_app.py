@@ -43,7 +43,7 @@ def sla_cloud_data(data):
             DB_URL, 
             data=json.dumps(data).encode('utf-8'),
             headers={'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0'},
-            method='POST'
+            method='put'
         )
         with urllib.request.urlopen(req, timeout=5) as response:
             pass
