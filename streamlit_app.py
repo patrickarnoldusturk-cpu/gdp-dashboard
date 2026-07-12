@@ -342,7 +342,7 @@ elif gekozen_menu == "🚀 Liquicity Info & Media":
         st.subheader("🎬 Aftermovie 2025")
         st.write("Bekijk hier de legendarische nafilm van vorig jaar:")
         # Officiële Liquicity YouTube Aftermovie player
-        st.video("https://youtube.com")
+        st.video("https://www.youtube.com/watch?v=o9ast9cAnLc")
 
     with col2_media:
         st.subheader("📱 Officiële Social Media")
