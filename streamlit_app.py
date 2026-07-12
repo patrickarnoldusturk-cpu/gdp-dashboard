@@ -61,9 +61,10 @@ st.sidebar.write("**Huidige groep:**", ", ".join(st.session_state.groeps_data["v
 st.sidebar.write("---")
 st.sidebar.header("📂 Menu Planner")
 gekozen_menu = st.sidebar.radio(
+gekozen_menu = st.sidebar.radio(
     "Ga naar:",
-   ["🗓 Welk Festival/Weekend?", "💶 Tickets & Spullen Kosten", "🎵 Timetable / Line-up", 
-     "🧳 Groeps-Paklijst", "🚗 Uber naar Festival", "📸 Google Foto's", "🎵 Groeps-Playlist"],
+    ["🗓️ Welk Festival/Weekend?", "💶 Tickets & Spullen Kosten", "🎵 Timetable / Line-up", 
+     "🧳 Groeps-Paklijst", "🚗 Autoreis & Parkeren", "📸 Google Foto's", "🎵 Groeps-Playlist"],
     key="sb_navigation_radio"
 )
 
@@ -248,7 +249,7 @@ elif gekozen_menu == "🧳 Groeps-Paklijst":
             st.success("Paklijst succesvol bijgewerkt!")
             st.rerun()
 
-elif gekozen_menu == "🚗 Uber naar Festival":
+elif gekozen_menu == "🚗 Autoreis & Parkeren":
     st.header("🚗 Autoreis & Parkeren")
     st.write("Alle logistiek voor de kogelvrije rit naar Geestmerambacht!")
     
@@ -256,8 +257,8 @@ elif gekozen_menu == "🚗 Uber naar Festival":
     with col1_car:
         st.subheader("📍 Navigatie naar Parkeerterrein")
         st.write("Klik op de knop hieronder om direct Google Maps te openen met de route naar het festivalterrein:")
-        # FIX: Dit stuurt de navigatie direct naar de Klavecimbelweg (Parkeren Liquicity)
-        st.link_button("🗺️ Start Google Maps Navigatie", "https://google.com", type="primary", use_container_width=True)
+        # JOUW EXACTE GOOGLE MAPS LINK GEKOPPELD:
+        st.link_button("🗺️ Start Google Maps Navigatie", "https://www.google.com/maps/place/Recreatiegebied+Geestmerambacht/@52.6894141,4.7616385,16z/data=!3m1!4b1!4m6!3m5!1s0x47cf572c1575159d:0x93dad4b4d4d1c852!8m2!3d52.6894109!4d4.7642134!16s%2Fg%2F1tfd66rr?entry=ttu", type="primary", use_container_width=True)
 
         
         st.write("---")
