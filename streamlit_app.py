@@ -238,7 +238,7 @@ with tab7:
     
     # Officiële Spotify speler integratie
     st.components.v1.iframe(
-        "https://spotify.com", 
+        "https://open.spotify.com/playlist/2xjqPMtbmhpsS1QAzwnkYs?si=DEMVm_bHT6qb_W-rO2sOIA", 
         height=380, 
         scrolling=False
     )
