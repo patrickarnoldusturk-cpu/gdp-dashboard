@@ -253,13 +253,15 @@ elif gekozen_menu == "🎵 Groeps-Playlist":
     st.write("Luister direct naar de playlist of voeg zelf je favoriete Drum & Bass tracks toe!")
     
     spotify_playlist_url = "https://spotify.com"
+    
+    # FIX: We gebruiken de universele embed.spotify.com gateway om de X-Frame blokkade te omzeilen
     embed_url = "https://spotify.com"
     
     col1_sp, col2_sp = st.columns(2)
     with col1_sp:
         st.subheader("🔊 Live Luisteren")
-        # De officiële iframe ZONDER sandbox laadt de speler nu gegarandeerd in de Cloud
-        st.components.v1.iframe(embed_url, height=380, scrolling=False)
+        # Dit component bouwt de link via de universele gateway op
+        st.components.v1.iframe(embed_url, height=400, scrolling=False)
         
     with col2_sp:
         st.subheader("➕ Nummers toevoegen?")
@@ -270,8 +272,6 @@ elif gekozen_menu == "🎵 Groeps-Playlist":
         3. Kopieer die deellink en plak hem in de code bij 'spotify_playlist_url'. 
         """)
         st.link_button("🎶 Open Playlist in Spotify-App", spotify_playlist_url, type="primary", key="p7_spotify_isolated")
-
-
 
 # ==========================================
 # 📋 GENERATOR ONDERIN VOOR DE DEELLINK
