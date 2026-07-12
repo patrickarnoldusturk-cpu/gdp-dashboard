@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import urllib.parse
 import json
 import base64
 
@@ -58,12 +57,12 @@ if st.sidebar.button("➕ Voeg mij toe"):
             st.sidebar.warning("Deze naam staat al in de lijst!")
 
 st.sidebar.write("**Huidige groep:**", ", ".join(g_data["vrienden"]))
+
 # --- TABS MAPS ---
 tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "🗓️ Welk Festival/Weekend?", "💶 Tickets & Spullen Kosten", "🎵 Timetable / Line-up", 
     "🧳 Groeps-Paklijst", "🚗 Uber naar Festival", "📸 Google Foto's", "🎵 Groeps-Playlist"
 ])
-
 # ==========================================
 # TAB 1: DATUMS / FESTIVALS PRIKKEN
 # ==========================================
@@ -138,13 +137,13 @@ with tab2:
             opties_verwijderen = [f"{i}: {u['Wie']} - €{u['Bedrag']} ({u['Omschrijving']})" for i, u in enumerate(g_data["uitgaven"])]
             te_verwijderen = st.selectbox("Welke uitgave wil je wissen?", opties_verwijderen)
             if st.button("🔴 Geselecteerde uitgave wissen"):
-                index_to_delete = int(te_verwijderen.split(":"))
+                # BUGFIX: Splitst correct op de dubbele punt en pakt het index-getal
+                index_to_delete = int(te_verwijderen.split(":")[0])
                 g_data["uitgaven"].pop(index_to_delete)
                 st.success("Uitgave verwijderd!")
                 st.rerun()
         else:
             st.info("Nog geen groepsuitgaven ingevoerd.")
-
 # ==========================================
 # TAB 3: TIMETABLE / LINE-UP
 # ==========================================
@@ -162,6 +161,13 @@ with tab3:
     with col1:
         st.subheader("🪐 Geef jouw 'Must-Sees' door")
         kiezende_vriend = st.selectbox("Wie ben je?", g_data["vrienden"], key="timetable_persoon")
+        
+        # BUGFIX: Checkboxes worden nu eerst getekend zodat ze bekend zijn in st.session_state
+        for act in liquicity_acts:
+            a_naam = act["Artiest"]
+            al_gevinkt = kiezende_vriend in g_data["timetable"].get(a_naam, [])
+            st.checkbox(f"⏱️ {act['Tijd']} | **{a_naam}** ({act['Stage']})", value=al_gevinkt, key=f"v_{a_naam}_{kiezende_vriend}")
+            
         if st.button("Mijn Line-up Voorkeuren Opslaan", type="primary"):
             for act in liquicity_acts:
                 a_naam = act["Artiest"]
@@ -174,10 +180,7 @@ with tab3:
                     g_data["timetable"][a_naam].remove(kiezende_vriend)
             st.success("Timetable lokaal bijgewerkt!")
             st.rerun()
-        for act in liquicity_acts:
-            a_naam = act["Artiest"]
-            al_gevinkt = kiezende_vriend in g_data["timetable"].get(a_naam, [])
-            st.checkbox(f"⏱️ {act['Tijd']} | **{a_naam}** ({act['Stage']})", value=al_gevinkt, key=f"v_{a_naam}_{kiezende_vriend}")
+            
     with col2:
         st.subheader("📊 Wie staat waar? (Groepsoverzicht)")
         timetable_data = []
@@ -189,36 +192,56 @@ with tab3:
                 "Aantal": len(wie_gaan), "Wie gaan er mee?": ", ".join(wie_gaan) if wie_gaan else "Nog niemand (😭)"
             })
         st.dataframe(pd.DataFrame(timetable_data), use_container_width=True, hide_index=True)
+
 # ==========================================
-# TAB 4 T/M 7: OVERIGE TOOLS
+# TAB 4: GROEPS-PAKLIJST
 # ==========================================
 with tab4:
     st.header("🧳 Wie takes what?")
+    vrienden_lijst = ["Niemand"] + g_data["vrienden"]
+    
+    for i, item in enumerate(g_data["paklijst"]):
+        col_a, col_b, col_c = st.columns(3)
+        with col_a: 
+            st.write(f"🔹 **{item['Item']}**")
+        with col_b: 
+            # BUGFIX: Controleert of de vriend nog in de lijst staat om index-crashes te voorkomen
+            h_idx = vrienden_lijst.index(item['Wie']) if item['Wie'] in vrienden_lijst else 0
+            st.selectbox(f"Wie voor {item['Item']}?", vrienden_lijst, index=h_idx, key=f"p_wie_{i}")
+        with col_c: 
+            st.checkbox(f"Ingepakt ({item['Item']})", value=item['Ingepakt'], key=f"p_check_{i}")
+            
     if st.button("💾 Sla Checklist Wijzigingen Op"):
         for i in range(len(g_data["paklijst"])):
             g_data["paklijst"][i]['Wie'] = st.session_state[f"p_wie_{i}"]
             g_data["paklijst"][i]['Ingepakt'] = st.session_state[f"p_check_{i}"]
         st.success("Paklijst lokaal bijgewerkt!")
         st.rerun()
-    for i, item in enumerate(g_data["paklijst"]):
-        col_a, col_b, col_c = st.columns(3)
-        with col_a: st.write(f"🔹 **{item['Item']}**")
-        with col_b: 
-            h_idx = (g_data["vrienden"].index(item['Wie']) + 1) if item['Wie'] in g_data["vrienden"] else 0
-            st.selectbox(f"Wie?", ["Niemand"] + g_data["vrienden"], index=h_idx, key=f"p_wie_{i}")
-        with col_c: st.checkbox("Ingepakt", value=item['Ingepakt'], key=f"p_check_{i}")
-
+# ==========================================
+# TAB 5 T/M 7: OVERIGE TOOLS & MEDIA
+# ==========================================
 with tab5:
     st.header("🚗 Snel een Uber naar het Festival")
-    st.link_button("🚖 Open Uber & Bestel Rit", "https://uber.com[formatted_address]=Geestmerambacht", type="primary")
+    st.write("Klik op de knop om direct een rit te plannen naar het festivalterrein.")
+    st.link_button("🚖 Open Uber & Bestel Rit", "https://uber.com", type="primary")
 
 with tab6:
     st.header("📸 Festival Foto's Verzamelen")
-    st.link_button("📂 Open Gedeeld Festival Album", "https://google.com", type="primary")
+    st.write("Upload hier jullie vetste foto's en video's van het weekend!")
+    # TIP: Pas de link hieronder aan naar jullie echte Google Photos album
+    google_photos_url = "https://google.com" 
+    st.link_button("📂 Open Gedeeld Festival Album", google_photos_url, type="primary")
 
 with tab7:
     st.header("🎵 Onze Gezamenlijke Liquicity Playlist")
-    st.components.v1.iframe("https://spotify.com", height=400)
+    st.write("Kom alvast in de sfeer met de lekkerste Drum & Bass tracks:")
+    
+    # Officiële Spotify speler integratie
+    st.components.v1.iframe(
+        "https://spotify.com", 
+        height=380, 
+        scrolling=False
+    )
 
 # ==========================================
 # 📋 GENERATOR ONDERIN VOOR DE DEELLINK
