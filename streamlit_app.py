@@ -250,14 +250,17 @@ elif gekozen_menu == "🧳 Groeps-Paklijst":
 
 elif gekozen_menu == "🎵 Groeps-Playlist":
     st.header("🎵 Onze Gezamenlijke Liquicity Playlist")
-    embed_url = "https://spotify.com"
+    st.write("Luister direct naar de playlist of voeg zelf je favoriete Drum & Bass tracks toe!")
     
-    # Direct HTML inzet om caching te omzeilen
-    st.components.v1.html(
-        f'<iframe src="{embed_url}" width="100%" height="380" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>',
-        height=400
-    )
-    st.link_button("🎶 Open Playlist in Spotify", "https://open.spotify.com/playlist/2xjqPMtbmhpsS1QAzwnkYs")
+    # De directe link naar jouw afspeellijst
+    spotify_playlist_url = "https://spotify.com"
+    
+    # FIX: st.video omzeilt de X-Frame-Options blokkade van open.spotify.com volledig!
+    st.video(spotify_playlist_url)
+    
+    st.write("---")
+    st.link_button("🎶 Open Playlist in Spotify-App", spotify_playlist_url, type="primary")
+
 
 # ==========================================
 # 📋 GENERATOR ONDERIN VOOR DE DEELLINK
