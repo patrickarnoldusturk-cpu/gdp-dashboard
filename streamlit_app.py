@@ -11,23 +11,20 @@ st.write("Plan jullie festivalweekend 100% stabiel en crashvrij!")
 # ==========================================
 # 🔐 TEXT-CODE SYNCHRONISATIE (CRASHVRIJ)
 # ==========================================
-standaard_data = {
-    "vrienden": ["Patrick", "Annika", "Harland", "Richard", "Dirk", "Van Brakel"],
-    "datums": {},
-    "uitgaven": [],
-    "timetable": {},
-    "paklijst": [
-        {"Item": "Partytent", "Wie": "Niemand", "Ingepakt": False},
-        {"Item": "Koelbox + Koelementen", "Wie": "Niemand", "Ingepakt": False},
-        {"Item": "Bluetooth Speaker", "Wie": "Niemand", "Ingepakt": False},
-        {"Item": "Ducttape", "Wie": "Niemand", "Ingepakt": False},
-        {"Item": "Kaartspel / Drankspellen", "Wie": "Niemand", "Ingepakt": False}
-    ]
-}
-
-# Zorg voor een veilige initiatie van de data
 if 'groeps_data' not in st.session_state:
-    st.session_state.groeps_data = standaard_data.copy()
+    st.session_state.groeps_data = {
+        "vrienden": ["Patrick", "Annika", "Harland", "Richard", "Dirk", "Van Brakel"],
+        "datums": {},
+        "uitgaven": [],
+        "timetable": {},
+        "paklijst": [
+            {"Item": "Partytent", "Wie": "Niemand", "Ingepakt": False},
+            {"Item": "Koelbox + Koelementen", "Wie": "Niemand", "Ingepakt": False},
+            {"Item": "Bluetooth Speaker", "Wie": "Niemand", "Ingepakt": False},
+            {"Item": "Ducttape", "Wie": "Niemand", "Ingepakt": False},
+            {"Item": "Kaartspel / Drankspellen", "Wie": "Niemand", "Ingepakt": False}
+        ]
+    }
 
 # --- SIDEBAR: DE UPDATER ---
 st.sidebar.header("🔄 Groeps-Update")
@@ -59,10 +56,10 @@ if st.sidebar.button("➕ Voeg mij toe", key="sb_add_person_btn"):
 
 st.sidebar.write("**Huidige groep:**", ", ".join(st.session_state.groeps_data["vrienden"]))
 
-# Verkorte variabele voor leesbaarheid
+# Directe variabele koppeling naar session state
 g_data = st.session_state.groeps_data
 
-# --- TABS MAPS ---
+# --- TABS ---
 tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "🗓️ Welk Festival/Weekend?", "💶 Tickets & Spullen Kosten", "🎵 Timetable / Line-up", 
     "🧳 Groeps-Paklijst", "🚗 Uber naar Festival", "📸 Google Foto's", "🎵 Groeps-Playlist"
@@ -79,13 +76,12 @@ with tab1:
         opties = ["Volledig Liquicity Weekend 2026", "Alleen Vrijdag", "Alleen Zaterdag", "Alleen Zondag"]
         
         huidige_voorkeur = g_data["datums"].get(naam, [])
+        gekozen_datums = st.multiselect("Welke festivals/weekenden kun jij?", opties, default=huidige_voorkeur, key=f"tab1_dates_widget_{naam}")
         
-        # Callback functie die de data direct live opslaat in session_state bij elke klik
-        def sync_datums():
-            st.session_state.groeps_data["datums"][naam] = st.session_state[f"dates_sync_{naam}"]
-
-        st.multiselect("Welke festivals/weekenden kun jij?", opties, default=huidige_voorkeur, key=f"dates_sync_{naam}", on_change=sync_datums)
-        st.caption("✨ Jouw selectie wordt automatisch live opgeslagen!")
+        if st.button("Voorkeur Opslaan", key="tab1_save_dates_btn"):
+            st.session_state.groeps_data["datums"][naam] = gekozen_datums
+            st.success("Voorkeur opgeslagen!")
+            st.rerun()
             
     with col2:
         st.subheader("📊 Live Stemresultaten")
@@ -147,7 +143,7 @@ with tab2:
             te_verwijderen = st.selectbox("Welke uitgave wil je wissen?", opties_verwijderen, key="tab2_delete_expense_selectbox")
             
             if st.button("🔴 Geselecteerde uitgave wissen", key="tab2_delete_expense_btn"):
-                index_to_delete = int(te_verwijderen.split(":"))
+                index_to_delete = int(te_verwijderen.split(":")[0])
                 st.session_state.groeps_data["uitgaven"].pop(index_to_delete)
                 st.success("Uitgave verwijderd!")
                 st.rerun()
@@ -171,21 +167,25 @@ with tab3:
         st.subheader("🪐 Geef jouw 'Must-Sees' door")
         kiezende_vriend = st.selectbox("Wie ben je?", g_data["vrienden"], key="tab3_vriend_select")
         
-        # Callback functie voor live timetable updates
-        def sync_timetable(a_name):
-            if a_name not in st.session_state.groeps_data["timetable"]:
-                st.session_state.groeps_data["timetable"][a_name] = []
-            
-            vinkje = st.session_state[f"tt_chk_{a_name}_{kiezende_vriend}"]
-            if vinkje and kiezende_vriend not in st.session_state.groeps_data["timetable"][a_name]:
-                st.session_state.groeps_data["timetable"][a_name].append(kiezende_vriend)
-            elif not vinkje and kiezende_vriend in st.session_state.groeps_data["timetable"][a_name]:
-                st.session_state.groeps_data["timetable"][a_name].remove(kiezende_vriend)
-
+        # Geen on_change meer: we tekenen gewone checkboxes
         for act in liquicity_acts:
             a_naam = act["Artiest"]
             al_gevinkt = kiezende_vriend in g_data["timetable"].get(a_naam, [])
-            st.checkbox(f"⏱️ {act['Tijd']} | **{a_naam}** ({act['Stage']})", value=al_gevinkt, key=f"tt_chk_{a_naam}_{kiezende_vriend}", on_change=sync_timetable, args=(a_naam,))
+            st.checkbox(f"⏱️ {act['Tijd']} | **{a_naam}** ({act['Stage']})", value=al_gevinkt, key=f"tt_chk_{a_naam}_{kiezende_vriend}")
+            
+        if st.button("Mijn Line-up Voorkeuren Opslaan", type="primary", key="tab3_save_timetable_btn"):
+            for act in liquicity_acts:
+                a_naam = act["Artiest"]
+                if a_naam not in st.session_state.groeps_data["timetable"]:
+                    st.session_state.groeps_data["timetable"][a_naam] = []
+                
+                vinkje = st.session_state.get(f"tt_chk_{a_naam}_{kiezende_vriend}")
+                if vinkje and kiezende_vriend not in st.session_state.groeps_data["timetable"][a_naam]:
+                    st.session_state.groeps_data["timetable"][a_naam].append(kiezende_vriend)
+                elif not vinkje and kiezende_vriend in st.session_state.groeps_data["timetable"][a_naam]:
+                    st.session_state.groeps_data["timetable"][a_naam].remove(kiezende_vriend)
+            st.success("Timetable bijgewerkt!")
+            st.rerun()
             
     with col2:
         st.subheader("📊 Wie staat waar? (Groepsoverzicht)")
@@ -206,22 +206,23 @@ with tab4:
     st.header("🧳 Wie takes what?")
     vrienden_lijst = ["Niemand"] + g_data["vrienden"]
     
-    # Live sync functies voor de paklijst
-    def sync_paklijst_wie(idx):
-        st.session_state.groeps_data["paklijst"][idx]['Wie'] = st.session_state[f"pk_wie_select_{idx}"]
-
-    def sync_paklijst_done(idx):
-        st.session_state.groeps_data["paklijst"][idx]['Ingepakt'] = st.session_state[f"pk_done_check_{idx}"]
-
+    # Geen on_change loops: we lezen de waardes pas uit als er op de knop wordt geklikt
     for i, item in enumerate(g_data["paklijst"]):
         col_a, col_b, col_c = st.columns(3)
         with col_a: 
             st.write(f"🔹 **{item['Item']}**")
         with col_b: 
             h_idx = vrienden_lijst.index(item['Wie']) if item['Wie'] in vrienden_lijst else 0
-            st.selectbox(f"Wie voor {item['Item']}?", vrienden_lijst, index=h_idx, key=f"pk_wie_select_{i}", on_change=sync_paklijst_wie, args=(i,))
+            st.selectbox(f"Wie voor {item['Item']}?", vrienden_lijst, index=h_idx, key=f"pk_wie_select_{i}")
         with col_c: 
-            st.checkbox(f"Ingepakt ({item['Item']})", value=item['Ingepakt'], key=f"pk_done_check_{i}", on_change=sync_paklijst_done, args=(i,))
+            st.checkbox(f"Ingepakt ({item['Item']})", value=item['Ingepakt'], key=f"pk_done_check_{i}")
+            
+    if st.button("💾 Sla Checklist Wijzigingen Op", key="tab4_save_packing_btn"):
+        for i in range(len(st.session_state.groeps_data["paklijst"])):
+            st.session_state.groeps_data["paklijst"][i]['Wie'] = st.session_state.get(f"pk_wie_select_{i}", "Niemand")
+            st.session_state.groeps_data["paklijst"][i]['Ingepakt'] = st.session_state.get(f"pk_done_check_{i}", False)
+        st.success("Paklijst succesvol bijgewerkt!")
+        st.rerun()
 # ==========================================
 # TABS 5 T/M 7: OVERIGE TOOLS & PLAYLIST
 # ==========================================
@@ -246,7 +247,7 @@ with tab7:
     col1_sp, col2_sp = st.columns(2)
     with col1_sp:
         st.subheader("🔊 Live Luisteren")
-        # Directe iframe-methode die stabiel laadt dankzij de st.columns breedte
+        # Dit bouwt de Spotify speler betrouwbaar in de app
         st.components.v1.iframe(embed_url, height=400, scrolling=False)
         
     with col2_sp:
