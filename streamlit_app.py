@@ -249,7 +249,8 @@ elif gekozen_menu == "🧳 Groeps-Paklijst":
             st.rerun()
 elif gekozen_menu == "🎵 Groeps-Playlist":
     st.header("🎵 Onze Gezamenlijke Liquicity Playlist")
-    # Correcte embed link voor de speler en open link voor de knop
+    st.write("Luister direct naar de playlist of voeg zelf je favoriete Drum & Bass tracks toe!")
+    
     spotify_playlist_url = "https://spotify.com"
     embed_url = "https://spotify.com"
     
@@ -260,9 +261,13 @@ elif gekozen_menu == "🎵 Groeps-Playlist":
         
     with col2_sp:
         st.subheader("➕ Nummers toevoegen?")
-        st.info("Open de link in de Spotify-app om samen te werken.")
-        st.link_button("🎶 Open Playlist in Spotify", spotify_playlist_url, type="primary")
-
+        st.write("Wil je dat iedereen nummers kan toevoegen?")
+        st.info("""
+        1. Open deze playlist in de **Spotify-app** op je telefoon of laptop.
+        2. Klik op het poppetje met het plusje (**'Samenwerkingsplaylist maken'**).
+        3. Kopieer die deellink en plak hem in de code bij 'spotify_playlist_url'. 
+        """)
+        st.link_button("🎶 Open Playlist in Spotify", spotify_playlist_url, type="primary", key="p7_spotify_isolated")
 
 # ==========================================
 # 📋 GENERATOR ONDERIN VOOR DE DEELLINK
