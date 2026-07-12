@@ -57,10 +57,9 @@ if st.sidebar.button("➕ Voeg mij toe", key="sb_add_person_btn"):
             st.sidebar.warning("Deze naam staat al in de lijst!")
 
 st.sidebar.write("**Huidige groep:**", ", ".join(st.session_state.groeps_data["vrienden"]))
-
 st.sidebar.write("---")
 st.sidebar.header("📂 Menu Planner")
-gekozen_menu = st.sidebar.radio(
+
 gekozen_menu = st.sidebar.radio(
     "Ga naar:",
     ["🗓️ Welk Festival/Weekend?", "💶 Tickets & Spullen Kosten", "🎵 Timetable / Line-up", 
