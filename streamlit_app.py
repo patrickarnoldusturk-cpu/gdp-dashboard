@@ -248,6 +248,36 @@ elif gekozen_menu == "🧳 Groeps-Paklijst":
             st.success("Paklijst succesvol bijgewerkt!")
             st.rerun()
 
+elif gekozen_menu == "🚗 Uber naar Festival":
+    st.header("🚗 Autoreis & Parkeren")
+    st.write("Alle logistiek voor de kogelvrije rit naar Geestmerambacht!")
+    
+    col1_car, col2_car = st.columns(2)
+    with col1_car:
+        st.subheader("📍 Navigatie naar Parkeerterrein")
+        st.write("Klik op de knop hieronder om direct Google Maps te openen met de route naar het festivalterrein:")
+        st.link_button("🗺️ Start Google Maps Navigatie", "https://google.com", type="primary", use_container_width=True)
+        
+        st.write("---")
+        st.subheader("🎫 Parkeerkaart Herinnering")
+        st.warning("⚠️ Vergeet niet vooraf jullie **Parkeerticket** online te kopen via de officiële Liquicity website! Dat scheelt enorm veel tijd bij de instroom.")
+
+    with col2_car:
+        st.subheader("📌 Waar staat de auto?")
+        st.write("Vul hier bij aankomst in waar de auto's geparkeerd staan. Wel zo fijn voor de maandagochtend!")
+        
+        with st.form(key="form_car_location"):
+            if "auto_locatie" not in st.session_state.groeps_data:
+                st.session_state.groeps_data["auto_locatie"] = ""
+                
+            auto_loc_input = st.text_area("Typ hier de parkeerplek (bijv. Vak B, Rij 3, naast de grote boom):", value=st.session_state.groeps_data["auto_locatie"])
+            submit_car = st.form_submit_button("💾 Parkeerplek Opslaan")
+            
+            if submit_car:
+                st.session_state.groeps_data["auto_locatie"] = auto_loc_input
+                st.success("Parkeerplek succesvol opgeslagen!")
+                st.rerun()
+
 elif gekozen_menu == "📸 Google Foto's":
     st.header("📸 Festival Foto's Verzamelen")
     st.write("Upload hier jullie vetste foto's en video's van het weekend!")
