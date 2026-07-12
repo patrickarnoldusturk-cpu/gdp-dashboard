@@ -234,13 +234,11 @@ with tab6:
 
 with tab7:
     st.header("🎵 Onze Gezamenlijke Liquicity Playlist")
-    st.write("Kom alvast in de sfeer met de lekkerste Drum & Bass tracks:")
+    st.write("Kom alvast in de sfeer met de lekkerste Drum & Bass tracks van Patrick's lijst:")
     
-    # VERVANG DE LINK HIERONDER DOOR JE EIGEN PLAYLIST-ID ALS JE EEN ANDERE PLAYLIST WILT:
-    # Zorg dat er altijd '/embed/playlist/' in de URL staat!
-    spotify_url = "https://open.spotify.com/playlist/2xjqPMtbmhpsS1QAzwnkYs?si=2qkKQg6XQXigjcR02oZDyw"
+    # Jouw persoonlijke afspeellijst-ID met anti-popup sandbox
+    spotify_url = "https://spotify.com"
     
-    # Dit toont de officiële ingebouwde muziekspeler direct op de pagina
     st.components.v1.html(
         f"""
         <iframe src="{spotify_url}" 
@@ -249,6 +247,7 @@ with tab7:
                 frameborder="0" 
                 allowfullscreen="" 
                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+                sandbox="allow-forms allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
                 loading="lazy">
         </iframe>
         """,
