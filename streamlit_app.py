@@ -236,23 +236,11 @@ with tab7:
     st.header("🎵 Onze Gezamenlijke Liquicity Playlist")
     st.write("Kom alvast in de sfeer met de lekkerste Drum & Bass tracks van Patrick's lijst:")
     
-    # Jouw persoonlijke afspeellijst-ID met anti-popup sandbox
-    spotify_url = "https://spotify.com"
+    # De directe embed-link naar jouw playlist
+    spotify_embed_url = "https://spotify.com"
     
-    st.components.v1.html(
-        f"""
-        <iframe src="{spotify_url}" 
-                width="100%" 
-                height="380" 
-                frameborder="0" 
-                allowfullscreen="" 
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
-                sandbox="allow-forms allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
-                loading="lazy">
-        </iframe>
-        """,
-        height=400
-    )
+    # Dit laadt de speler via Streamlit's eigen component, zonder pop-ups en zonder blokkades
+    st.video(spotify_embed_url)
 
 # ==========================================
 # 📋 GENERATOR ONDERIN VOOR DE DEELLINK
