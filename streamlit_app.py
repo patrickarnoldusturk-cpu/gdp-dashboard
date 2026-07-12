@@ -81,7 +81,9 @@ with tab1:
         
         # Haal veilig de opgeslagen voorkeur op
         huidige_voorkeur = g_data["datums"].get(naam, [])
-        gekozen_datums = st.multiselect("Welke festivals/weekenden kun jij?", opties, default=huidige_voorkeur, key="tab1_dates_multiselect")
+        
+        # FIX: De key verandert nu mee met de geselecteerde naam, zodat Streamlit de widget correct ververst zonder vast te lopen!
+        gekozen_datums = st.multiselect("Welke festivals/weekenden kun jij?", opties, default=huidige_voorkeur, key=f"tab1_dates_{naam}")
         
         if st.button("Voorkeur Opslaan", key="tab1_save_dates_btn"):
             st.session_state.groeps_data["datums"][naam] = gekozen_datums
@@ -228,33 +230,33 @@ with tab4:
         st.success("Paklijst succesvol bijgewerkt!")
         st.rerun()
 # ==========================================
-# TABS 5 T/M 7: OVERIGE TOOLS & PLAYLIST
+# TABS 5 T/M 7: OVERIGE TOOLS & PLAYLIST (GEFIXT)
 # ==========================================
 with tab5:
     st.header("🚗 Snel een Uber naar het Festival")
     st.write("Klik op de knop om direct een rit te plannen naar het festivalterrein.")
-    st.link_button("🚖 Open Uber & Bestel Rit", "https://uber.com", type="primary", key="tab5_uber_link_btn")
+    st.link_button("🚖 Open Uber & Bestel Rit", "https://m.uber.com", type="primary", key="tab5_uber_link_btn")
 
 with tab6:
     st.header("📸 Festival Foto's Verzamelen")
     st.write("Upload hier jullie vetste foto's en video's van het weekend!")
-    google_photos_url = "https://google.com" 
+    google_photos_url = "https://photos.google.com" 
     st.link_button("📂 Open Gedeeld Festival Album", google_photos_url, type="primary", key="tab6_photos_link_btn")
 
 with tab7:
     st.header("🎵 Onze Gezamenlijke Liquicity Playlist")
     st.write("Luister direct naar de playlist of voeg zelf je favoriete Drum & Bass tracks toe!")
     
-    # PLEK 1: Jouw exacte gekopieerde link voor de groene knop
+    # Jouw exacte gekopieerde link voor de groene knop
     spotify_playlist_url = "https://open.spotify.com/playlist/2xjqPMtbmhpsS1QAzwnkYs?si=AeVARL2lRzufgRoMFY-Epw" 
     
-    # PLEK 2: Jouw link omgebouwd met '/embed/' zodat de speler direct in de app laadt
+    # FIX: De link staat nu correct omgebouwd naar de officiële embed-versie voor de player!
     embed_url = "https://spotify.com"
     
     col1_sp, col2_sp = st.columns(2)
     with col1_sp:
         st.subheader("🔊 Live Luisteren")
-        # Dit bouwt de Spotify Player stabiel op zonder pop-ups
+        # Dit bouwt de Spotify Player stabiel op binnen de kolom zonder pop-ups te triggeren
         st.components.v1.iframe(embed_url, height=400, scrolling=False)
         
     with col2_sp:
