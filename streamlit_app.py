@@ -78,7 +78,6 @@ with tab1:
         
         huidige_voorkeur = g_data["datums"].get(naam, [])
         
-        # FIX: We gebruiken nu een vaste, statische key voor het formulier om ID-mismatches te voorkomen
         with st.form(key="form_dates_static"):
             gekozen_datums = st.multiselect("Welke festivals/weekenden kun jij?", opties, default=huidige_voorkeur, key="widget_dates_static")
             submit_dates = st.form_submit_button("Voorkeur Opslaan")
@@ -178,7 +177,6 @@ with tab3:
         st.subheader("🪐 Geef jouw 'Must-Sees' door")
         kiezende_vriend = st.selectbox("Wie ben je?", g_data["vrienden"], key="tab3_vriend_select")
         
-        # FIX: Formulier key is nu statisch gemaakt zodat de cloud server niet struikelt bij een wissel van naam
         with st.form(key="form_timetable_static"):
             for act in liquicity_acts:
                 a_naam = act["Artiest"]
@@ -250,7 +248,7 @@ with tab5:
 with tab6:
     st.header("📸 Festival Foto's Verzamelen")
     st.write("Upload hier jullie vetste foto's en video's van het weekend!")
-    google_photos_url = "https://photos.google.com" 
+    google_photos_url = "https://google.com" 
     st.link_button("📂 Open Gedeeld Festival Album", google_photos_url, type="primary", key="tab6_photos_link_btn")
 
 with tab7:
@@ -271,16 +269,20 @@ with tab7:
         st.info("""
         1. Open deze playlist in de **Spotify-app** op je telefoon of laptop.
         2. Klik op het poppetje met het plusje (**'Samenwerkingsplaylist maken'**).
-        3. Kopieer die specifieke deellink en plak hem in de code bij 'spotify_playlist_url'. 
+        3. Kopieer die specifieke deellink und plak hem in de code bij 'spotify_playlist_url'. 
         """)
         st.link_button("🎶 Open Playlist in Spotify", spotify_playlist_url, type="primary", key="tab7_unique_spotify_action_btn")
 
 # ==========================================
-# 📋 GENERATOR ONDERIN VOOR DE DEELLINK
+# 📋 GENERATOR ONDERIN VOOR DE DEELLINK (RAM-FIX)
 # ==========================================
 st.write("---")
 st.subheader("📋 De Actuele Groeps-Deelcode")
-st.write("Kopieer de onderstaande code en stuur hem via WhatsApp naar je vrienden om de app live te synchroniseren!")
-json_bytes = json.dumps(g_data).encode('utf-8')
-deel_code = base64.b64encode(json_bytes).decode('utf-8')
-st.text_area("Kopieer deze code:", value=deel_code, height=100, key="bottom_share_code_textarea")
+st.write("Om serveroverbelasting te voorkomen, klik je op de knop hieronder om de nieuwste code voor WhatsApp te genereren.")
+
+# SERVER RAM FIX: De code wordt nu pas berekend als je expliciet op de knop klikt!
+if st.button("🔗 Genereer Nieuwe WhatsApp Code", key="generate_share_code_btn"):
+    json_bytes = json.dumps(g_data).encode('utf-8')
+    deel_code = base64.b64encode(json_bytes).decode('utf-8')
+    st.text_area("Kopieer deze code:", value=deel_code, height=100, key="bottom_share_code_textarea")
+    st.success("Code succesvol gegenereerd! Kopieer de tekst hierboven.")
