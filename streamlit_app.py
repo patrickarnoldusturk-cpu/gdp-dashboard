@@ -12,7 +12,7 @@ st.write("Plan jullie festivalweekend 100% stabiel en crashvrij!")
 # 🔐 TEXT-CODE SYNCHRONISATIE (CRASHVRIJ)
 # ==========================================
 standaard_data = {
-    "vrienden": ["Patrick", "Annika", "Harland", "Richard", "Dirk", "Van Brakel"],
+    "vrienden": ["Patrick", "Annika", "Harland", "Richard", "Dirk", "Cindy Van Brakel"],
     "datums": {},
     "uitgaven": [],
     "timetable": {},
