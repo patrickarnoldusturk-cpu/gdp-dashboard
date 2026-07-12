@@ -69,6 +69,13 @@ gekozen_menu = st.sidebar.radio(
 
 
 g_data = st.session_state.groeps_data
+# Hulpbalk voor mobiele gebruikers
+st.info("📱 **Gebruik je een telefoon?** Klik op het pijltje **> linksboven** om het menu te openen!")
+
+# Dynamische paginatitel die DIRECT laat zien waar je bent
+st.markdown(f"### 📍 Je bent nu hier: **{gekozen_menu}**")
+st.write("---")
+
 # ==========================================
 # PAGINA 1: DATUMS / FESTIVALS PRIKKEN
 # ==========================================
