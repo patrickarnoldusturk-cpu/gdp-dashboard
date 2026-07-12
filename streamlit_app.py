@@ -238,7 +238,7 @@ with tab7:
     
     # VERVANG DE LINK HIERONDER DOOR JE EIGEN PLAYLIST-ID ALS JE EEN ANDERE PLAYLIST WILT:
     # Zorg dat er altijd '/embed/playlist/' in de URL staat!
-    spotify_url = "https://spotify.com"
+    spotify_url = "https://open.spotify.com/playlist/2xjqPMtbmhpsS1QAzwnkYs?si=2qkKQg6XQXigjcR02oZDyw"
     
     # Dit toont de officiële ingebouwde muziekspeler direct op de pagina
     st.components.v1.html(
