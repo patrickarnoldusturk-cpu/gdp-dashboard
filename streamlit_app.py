@@ -219,13 +219,32 @@ elif gekozen_menu == "🎵 Timetable / Line-up":
         st.dataframe(pd.DataFrame(timetable_data), use_container_width=True, hide_index=True)
 
 # ==========================================
-# PAGINA 4: GROEPS-PAKLIJST
+# PAGINA 4: GROEPS-PAKLIJST (MET TOEVOEG-FUNCTIE)
 # ==========================================
 elif gekozen_menu == "🧳 Groeps-Paklijst":
     st.header("🧳 Wie takes what?")
     vrienden_lijst = ["Niemand"] + g_data["vrienden"]
     
-    # CRASH FIX: Geen harde index-keys meer aan de widgets gekoppeld
+    # SECTIE A: Nieuw item toevoegen aan de lijst
+    st.subheader("➕ Nieuw item toevoegen")
+    with st.form(key="form_add_packing_item"):
+        nieuw_item = st.text_input("Wat moet er nog mee? (bijv. 'Verlengsnoer', 'Koepeltent'):")
+        submit_new_item = st.form_submit_button("Voeg item toe aan de lijst")
+        
+        if submit_new_item and nieuw_item.strip() != "":
+            # Voeg het nieuwe item toe aan de centrale paklijst
+            st.session_state.groeps_data["paklijst"].append({
+                "Item": nieuw_item.strip(),
+                "Wie": "Niemand",
+                "Ingepakt": False
+            })
+            st.success(f"'{nieuw_item}' toegevoegd aan de checklist!")
+            st.rerun()
+
+    st.write("---")
+    st.subheader("📋 De Groeps-Checklist")
+    
+    # SECTIE B: De checklist invullen en opslaan
     with st.form(key="form_paklijst_isolated"):
         tijdelijke_wie = []
         tijdelijke_done = []
@@ -236,9 +255,9 @@ elif gekozen_menu == "🧳 Groeps-Paklijst":
                 st.write(f"🔹 **{item['Item']}**")
             with col_b: 
                 h_idx = vrienden_lijst.index(item['Wie']) if item['Wie'] in vrienden_lijst else 0
-                tijdelijke_wie.append(st.selectbox(f"Wie voor {item['Item']}?", vrienden_lijst, index=h_idx))
+                tijdelijke_wie.append(st.selectbox(f"Wie voor {item['Item']}?", vrienden_lijst, index=h_idx, key=f"pk_w_{i}"))
             with col_c: 
-                tijdelijke_done.append(st.checkbox(f"Ingepakt ({item['Item']})", value=item['Ingepakt']))
+                tijdelijke_done.append(st.checkbox(f"Ingepakt ({item['Item']})", value=item['Ingepakt'], key=f"pk_d_{i}"))
                 
         submit_packing = st.form_submit_button("💾 Sla Checklist Wijzigingen Op")
         
@@ -248,6 +267,7 @@ elif gekozen_menu == "🧳 Groeps-Paklijst":
                 st.session_state.groeps_data["paklijst"][i]['Ingepakt'] = tijdelijke_done[i]
             st.success("Paklijst succesvol bijgewerkt!")
             st.rerun()
+
 
 elif gekozen_menu == "🚗 Autoreis & Parkeren":
     st.header("🚗 Autoreis & Parkeren")
