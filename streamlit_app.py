@@ -350,7 +350,7 @@ elif gekozen_menu == "🚀 Liquicity Info & Media":
         
         # Grote, overzichtelijke knoppen naar alle officiële Liquicity kanalen
         st.link_button("🌐 Officiële Website", "https://liquicity.com", type="secondary", use_container_width=True)
-        st.link_button("📸 Instagram", "https://instagram.com", type="secondary", use_container_width=True)
-        st.link_button("🎵 TikTok", "https://tiktok.com", type="secondary", use_container_width=True)
-        st.link_button("📺 YouTube Kanaal", "https://youtube.com", type="secondary", use_container_width=True)
-        st.link_button("💬 Facebook Community", "https://facebook.com", type="secondary", use_container_width=True)
+        st.link_button("📸 Instagram", "https://www.instagram.com/liquicity/", type="secondary", use_container_width=True)
+        st.link_button("🎵 TikTok", "https://www.tiktok.com/@liquicity", type="secondary", use_container_width=True)
+        st.link_button("📺 YouTube Kanaal", "https://www.youtube.com/channel/UCSXm6c-n6lsjtyjvdD0bFVw", type="secondary", use_container_width=True)
+        st.link_button("💬 Facebook Community", "https://www.facebook.com/liquicity", type="secondary", use_container_width=True)
