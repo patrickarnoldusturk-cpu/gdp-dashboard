@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import json
 import base64
+import re
 
 # App configuratie
 st.set_page_config(page_title="Liquicity Festival Planner 2026", page_icon="🚀", layout="wide")
@@ -12,7 +13,7 @@ st.write("Plan jullie festivalweekend 100% stabiel en crashvrij!")
 # 🔐 TEXT-CODE SYNCHRONISATIE (CRASHVRIJ)
 # ==========================================
 standaard_data = {
-    "vrienden": ["Patrick", "Annika", "Harland", "Richard", "Dirk", "Cindy Van Brakel"],
+    "vrienden": ["Patrick", "Annika", "Harland", "Richard", "Dirk", "Van Brakel"],
     "datums": {},
     "uitgaven": [],
     "timetable": {},
@@ -32,8 +33,8 @@ g_data = st.session_state.groeps_data
 
 # --- SIDEBAR: DE UPDATER ---
 st.sidebar.header("🔄 Groeps-Update")
-import_code = st.sidebar.text_area("Plak hier de nieuwste code van de WhatsApp-groep:")
-if st.sidebar.button("📥 Update Mijn App"):
+import_code = st.sidebar.text_area("Plak hier de nieuwste code van de WhatsApp-groep:", key="sb_import_code")
+if st.sidebar.button("📥 Update Mijn App", key="sb_update_btn"):
     if import_code:
         try:
             gedecodeerd = base64.b64decode(import_code.strip()).decode('utf-8')
@@ -45,8 +46,8 @@ if st.sidebar.button("📥 Update Mijn App"):
 
 st.sidebar.write("---")
 st.sidebar.header("👥 Wie gaat er mee?")
-nieuwe_naam = st.sidebar.text_input("Naam van nieuwe festivalganger:")
-if st.sidebar.button("➕ Voeg mij toe"):
+nieuwe_naam = st.sidebar.text_input("Naam van nieuwe festivalganger:", key="sb_nieuwe_naam")
+if st.sidebar.button("➕ Voeg mij toe", key="sb_add_btn"):
     if nieuwe_naam and nieuwe_naam.strip() != "":
         s_naam = nieuwe_naam.strip()
         if s_naam not in g_data["vrienden"]:
@@ -71,10 +72,10 @@ with tab1:
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Jouw voorkeur doorgeven")
-        naam = st.selectbox("Wie ben je?", g_data["vrienden"], key="datum_naam")
+        naam = st.selectbox("Wie ben je?", g_data["vrienden"], key="tab1_naam_select")
         opties = ["Volledig Liquicity Weekend 2026", "Alleen Vrijdag", "Alleen Zaterdag", "Alleen Zondag"]
-        gekozen_datums = st.multiselect("Welke festivals/weekenden kun jij?", opties, default=g_data["datums"].get(naam, []))
-        if st.button("Voorkeur Opslaan"):
+        gekozen_datums = st.multiselect("Welke festivals/weekenden kun jij?", opties, default=g_data["datums"].get(naam, []), key="tab1_datum_multi")
+        if st.button("Voorkeur Opslaan", key="tab1_save_btn"):
             g_data["datums"][naam] = gekozen_datums
             st.success("Voorkeur lokaal opgeslagen!")
             st.rerun()
@@ -103,10 +104,10 @@ with tab2:
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Nieuwe festivaluitgave invoeren")
-        wie_betaalt = st.selectbox("Wie heeft betaald?", g_data["vrienden"], key="kosten_wie")
-        bedrag = st.number_input("Bedrag (€)", min_value=0.0, step=0.01, value=0.0)
-        omschrijving = st.text_input("Waarvoor? (bijv. 'Combi-tickets', 'Campingboodschappen')")
-        if st.button("Uitgave Toevoegen"):
+        wie_betaalt = st.selectbox("Wie heeft betaald?", g_data["vrienden"], key="tab2_wie_pay")
+        bedrag = st.number_input("Bedrag (€)", min_value=0.0, step=0.01, value=0.0, key="tab2_bedrag_input")
+        omschrijving = st.text_input("Waarvoor? (bijv. 'Combi-tickets', 'Campingboodschappen')", key="tab2_omschr_input")
+        if st.button("Uitgave Toevoegen", key="tab2_add_btn"):
             if bedrag > 0 and omschrijving:
                 g_data["uitgaven"].append({"Wie": wie_betaalt, "Bedrag": bedrag, "Omschrijving": omschrijving})
                 st.success("Uitgave toegevoegd!")
@@ -135,10 +136,9 @@ with tab2:
                     st.write(f"⚪ **{persoon}** staat precies quitte.")
             st.write("---")
             opties_verwijderen = [f"{i}: {u['Wie']} - €{u['Bedrag']} ({u['Omschrijving']})" for i, u in enumerate(g_data["uitgaven"])]
-            te_verwijderen = st.selectbox("Welke uitgave wil je wissen?", opties_verwijderen)
-            if st.button("🔴 Geselecteerde uitgave wissen"):
-                # BUGFIX: Splitst correct op de dubbele punt en pakt het index-getal
-                index_to_delete = int(te_verwijderen.split(":")[0])
+            te_verwijderen = st.selectbox("Welke uitgave wil je wissen?", opties_verwijderen, key="tab2_delete_select")
+            if st.button("🔴 Geselecteerde uitgave wissen", key="tab2_delete_btn"):
+                index_to_delete = int(te_verwijderen.split(":"))
                 g_data["uitgaven"].pop(index_to_delete)
                 st.success("Uitgave verwijderd!")
                 st.rerun()
@@ -160,15 +160,14 @@ with tab3:
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("🪐 Geef jouw 'Must-Sees' door")
-        kiezende_vriend = st.selectbox("Wie ben je?", g_data["vrienden"], key="timetable_persoon")
+        kiezende_vriend = st.selectbox("Wie ben je?", g_data["vrienden"], key="tab3_user_select")
         
-        # BUGFIX: Checkboxes worden nu eerst getekend zodat ze bekend zijn in st.session_state
         for act in liquicity_acts:
             a_naam = act["Artiest"]
             al_gevinkt = kiezende_vriend in g_data["timetable"].get(a_naam, [])
             st.checkbox(f"⏱️ {act['Tijd']} | **{a_naam}** ({act['Stage']})", value=al_gevinkt, key=f"v_{a_naam}_{kiezende_vriend}")
             
-        if st.button("Mijn Line-up Voorkeuren Opslaan", type="primary"):
+        if st.button("Mijn Line-up Voorkeuren Opslaan", type="primary", key="tab3_save_btn"):
             for act in liquicity_acts:
                 a_naam = act["Artiest"]
                 if a_naam not in g_data["timetable"]:
@@ -205,58 +204,48 @@ with tab4:
         with col_a: 
             st.write(f"🔹 **{item['Item']}**")
         with col_b: 
-            # BUGFIX: Controleert of de vriend nog in de lijst staat om index-crashes te voorkomen
             h_idx = vrienden_lijst.index(item['Wie']) if item['Wie'] in vrienden_lijst else 0
             st.selectbox(f"Wie voor {item['Item']}?", vrienden_lijst, index=h_idx, key=f"p_wie_{i}")
         with col_c: 
             st.checkbox(f"Ingepakt ({item['Item']})", value=item['Ingepakt'], key=f"p_check_{i}")
             
-    if st.button("💾 Sla Checklist Wijzigingen Op"):
+    if st.button("💾 Sla Checklist Wijzigingen Op", key="tab4_save_btn"):
         for i in range(len(g_data["paklijst"])):
-            g_data["paklijst"][i]['Wie'] = st.session_state[f"p_wie_{i}"]
-            g_data["paklijst"][i]['Ingepakt'] = st.session_state[f"p_check_{i}"]
+            g_data["paklijst"][i]['Wie'] = st.session_state.get(f"p_wie_{i}", "Niemand")
+            g_data["paklijst"][i]['Ingepakt'] = st.session_state.get(f"p_check_{i}", False)
         st.success("Paklijst lokaal bijgewerkt!")
         st.rerun()
 # ==========================================
-# TAB 5 T/M 6: OVERIGE TOOLS & MEDIA
+# TABS 5 T/M 7: OVERIGE TOOLS & PLAYLIST
 # ==========================================
 with tab5:
     st.header("🚗 Snel een Uber naar het Festival")
     st.write("Klik op de knop om direct een rit te plannen naar het festivalterrein.")
-    st.link_button("🚖 Open Uber & Bestel Rit", "https://uber.com", type="primary")
+    st.link_button("🚖 Open Uber & Bestel Rit", "https://uber.com", type="primary", key="tab5_uber_link")
 
 with tab6:
     st.header("📸 Festival Foto's Verzamelen")
     st.write("Upload hier jullie vetste foto's en video's van het weekend!")
-    # TIP: Pas de link hieronder aan naar jullie echte Google Photos album
     google_photos_url = "https://google.com" 
-    st.link_button("📂 Open Gedeeld Festival Album", google_photos_url, type="primary")
+    st.link_button("📂 Open Gedeeld Festival Album", google_photos_url, type="primary", key="tab6_photos_link")
 
-# ==========================================
-# TAB 7: SPOTIFY GROEPS-PLAYLIST
-# ==========================================
 with tab7:
     st.header("🎵 Onze Gezamenlijke Liquicity Playlist")
     st.write("Luister direct naar de playlist of voeg zelf je favoriete Drum & Bass tracks toe!")
     
-    # Jouw eigen link
-    spotify_playlist_url = "https://open.spotify.com/playlist/2xjqPMtbmhpsS1QAzwnkYs?si=c4aad32c934f4349&pt=ee26a639c0facc55f723cbfd8d11178e" 
+    spotify_playlist_url = "https://spotify.com" 
     
-    # Kogelvrije methode om de unieke playlist-ID van 22 tekens te pakken
-    import re
     match = re.search(r'playlist/([a-zA-Z0-9]{22})', spotify_playlist_url)
     if match:
         playlist_id = match.group(1)
     else:
         playlist_id = "2xjqPMtbmhpsS1QAzwnkYs"
         
-    embed_url = f"https://open.spotify.com/embed/playlist/{playlist_id}?utm_source=generator&theme=0"
+    embed_url = f"https://spotify.com{playlist_id}?utm_source=generator&theme=0"
     
-    col1, col2 = st.columns(2)
-    with col1:
+    col1_sp, col2_sp = st.columns(2)
+    with col1_sp:
         st.subheader("🔊 Live Luisteren")
-        # html component met sandbox voorkomt de pop-up op de live website, 
-        # terwijl de st.columns lay-out zorgt dat de speler niet te breed wordt!
         st.components.v1.html(
             f"""
             <iframe src="{embed_url}" 
@@ -272,15 +261,15 @@ with tab7:
             height=420
         )
         
-    with col2:
+    with col2_sp:
         st.subheader("➕ Nummers toevoegen?")
         st.write("Wil je dat iedereen nummers kan toevoegen?")
         st.info("""
         1. Open deze playlist in de **Spotify-app** op je telefoon of laptop.
-        2. Klik op het poppetje met het plusje (**'Samenwerkingsplaylist maken'** of 'Collaborative playlist').
-        3. Kopieer die specifieke deellink en plak hem in de code van festival.py bij 'spotify_playlist_url'. 
+        2. Klik op het poppetje met het plusje (**'Samenwerkingsplaylist maken'**).
+        3. Kopieer die specifieke deellink en plak hem in de code bij 'spotify_playlist_url'. 
         """)
-        st.link_button("🎶 Open Playlist in Spotify", spotify_playlist_url, type="primary")
+        st.link_button("🎶 Open Playlist in Spotify", spotify_playlist_url, type="primary", key="tab7_spotify_link")
 
 # ==========================================
 # 📋 GENERATOR ONDERIN VOOR DE DEELLINK
@@ -290,4 +279,4 @@ st.subheader("📋 De Actuele Groeps-Deelcode")
 st.write("Kopieer de onderstaande code en stuur hem via WhatsApp naar je vrienden om de app live te synchroniseren!")
 json_bytes = json.dumps(g_data).encode('utf-8')
 deel_code = base64.b64encode(json_bytes).decode('utf-8')
-st.text_area("Kopieer deze code:", value=deel_code, height=100)
+st.text_area("Kopieer deze code:", value=deel_code, height=100, key="bottom_share_code")
