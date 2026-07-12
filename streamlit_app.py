@@ -247,25 +247,10 @@ elif gekozen_menu == "🧳 Groeps-Paklijst":
                 st.session_state.groeps_data["paklijst"][i]['Ingepakt'] = tijdelijke_done[i]
             st.success("Paklijst succesvol bijgewerkt!")
             st.rerun()
-# ==========================================
-# PAGINA 5 T/M 7: OVERIGE TOOLS & PLAYLIST
-# ==========================================
-elif gekozen_menu == "🚗 Uber naar Festival":
-    st.header("🚗 Snel een Uber naar het Festival")
-    st.write("Klik op de knop om direct een rit te plannen naar het festivalterrein.")
-    st.link_button("🚖 Open Uber & Bestel Rit", "https://uber.com", type="primary", key="p5_uber_isolated")
-
-elif gekozen_menu == "📸 Google Foto's":
-    st.header("📸 Festival Foto's Verzamelen")
-    st.write("Upload hier jullie vetste foto's en video's van het weekend!")
-    google_photos_url = "https://google.com" 
-    st.link_button("📂 Open Gedeeld Festival Album", google_photos_url, type="primary", key="p6_photos_isolated")
-
 elif gekozen_menu == "🎵 Groeps-Playlist":
     st.header("🎵 Onze Gezamenlijke Liquicity Playlist")
-    st.write("Luister direct naar de playlist of voeg zelf je favoriete Drum & Bass tracks toe!")
-    
-    spotify_playlist_url = "https://spotify.com" 
+    # Correcte embed link voor de speler en open link voor de knop
+    spotify_playlist_url = "https://spotify.com"
     embed_url = "https://spotify.com"
     
     col1_sp, col2_sp = st.columns(2)
@@ -275,13 +260,9 @@ elif gekozen_menu == "🎵 Groeps-Playlist":
         
     with col2_sp:
         st.subheader("➕ Nummers toevoegen?")
-        st.write("Wil je dat iedereen nummers kan toevoegen?")
-        st.info("""
-        1. Open deze playlist in de **Spotify-app** op je telefoon of laptop.
-        2. Klik op het poppetje met het plusje (**'Samenwerkingsplaylist maken'**).
-        3. Kopieer die deellink en plak hem in de code bij 'spotify_playlist_url'. 
-        """)
-        st.link_button("🎶 Open Playlist in Spotify", spotify_playlist_url, type="primary", key="p7_spotify_isolated")
+        st.info("Open de link in de Spotify-app om samen te werken.")
+        st.link_button("🎶 Open Playlist in Spotify", spotify_playlist_url, type="primary")
+
 
 # ==========================================
 # 📋 GENERATOR ONDERIN VOOR DE DEELLINK
