@@ -250,28 +250,31 @@ elif gekozen_menu == "🧳 Groeps-Paklijst":
 
 elif gekozen_menu == "🎵 Groeps-Playlist":
     st.header("🎵 Onze Gezamenlijke Liquicity Playlist")
-    st.write("Kom alvast helemaal in de festivalstemming!")
+    st.write("Luister direct naar de playlist of voeg zelf je favoriete Drum & Bass tracks toe!")
     
-    spotify_playlist_url = "https://spotify.com"
+    # Jouw exacte werkende link met de samenwerkingscode (collaborative token)
+    spotify_playlist_url = "https://open.spotify.com/playlist/2xjqPMtbmhpsS1QAzwnkYs?si=c4aad32c934f4349&pt=ee26a639c0facc55f723cbfd8d11178e" 
     
-    # Prachtig en stabiel alternatief design zonder weigerende iframes
-    col1_sp, col2_sp = st.columns(2)
-    with col1_sp:
+    # FIX: We pakken direct het ID zonder dat de 'import re' de cloud-server laat crashen
+    playlist_id = "2xjqPMtbmhpsS1QAzwnkYs"
+        
+    embed_url = f"https://open.spotify.com/embed/playlist/{playlist_id}?utm_source=generator&theme=0"
+    
+    col1, col2 = st.columns(2)
+    with col1:
         st.subheader("🔊 Live Luisteren")
-        st.success("🎧 **Patrick's Liquicity 2026 Playlist** staat voor jullie klaar!")
-        st.write("Vanwege de strenge beveiliging van Spotify op live websites, opent de playlist direct in je eigen Spotify-app voor de beste geluidskwaliteit.")
+        # Dit bouwt de originele speler op met de juiste cloud-parameters
+        st.components.v1.iframe(embed_url, height=400, scrolling=False)
         
-        # Grote, duidelijke actieknop die altijd werkt
-        st.link_button("🔥 Open Playlist & Start de Muziek", spotify_playlist_url, type="primary", use_container_width=True)
-        
-    with col2_sp:
+    with col2:
         st.subheader("➕ Nummers toevoegen?")
-        st.write("Wil je dat iedereen nummers kan toevoegen aan de lijst?")
+        st.write("Wil je dat iedereen nummers kan toevoegen?")
         st.info("""
         1. Open deze playlist in de **Spotify-app** op je telefoon of laptop.
-        2. Klik op het poppetje met het plusje (**'Samenwerkingsplaylist maken'**).
-        3. Kopieer die deellink en plak hem in de code bij 'spotify_playlist_url'. 
+        2. Klik op het poppetje met het plusje (**'Samenwerkingsplaylist maken'** of 'Collaborative playlist').
+        3. Kopieer die specifieke deellink en plak hem in de code van festival.py bij 'spotify_playlist_url'. 
         """)
+        st.link_button("🎶 Open Playlist in Spotify", spotify_playlist_url, type="primary", key="p7_spotify_final_btn")
 
 # ==========================================
 # 📋 GENERATOR ONDERIN VOOR DE DEELLINK
