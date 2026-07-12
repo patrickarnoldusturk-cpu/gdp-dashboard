@@ -252,14 +252,25 @@ elif gekozen_menu == "🎵 Groeps-Playlist":
     st.header("🎵 Onze Gezamenlijke Liquicity Playlist")
     st.write("Luister direct naar de playlist of voeg zelf je favoriete Drum & Bass tracks toe!")
     
-    # De directe link naar jouw afspeellijst
     spotify_playlist_url = "https://spotify.com"
+    embed_url = "https://spotify.com"
     
-    # FIX: st.video omzeilt de X-Frame-Options blokkade van open.spotify.com volledig!
-    st.video(spotify_playlist_url)
-    
-    st.write("---")
-    st.link_button("🎶 Open Playlist in Spotify-App", spotify_playlist_url, type="primary")
+    col1_sp, col2_sp = st.columns(2)
+    with col1_sp:
+        st.subheader("🔊 Live Luisteren")
+        # De officiële iframe ZONDER sandbox laadt de speler nu gegarandeerd in de Cloud
+        st.components.v1.iframe(embed_url, height=380, scrolling=False)
+        
+    with col2_sp:
+        st.subheader("➕ Nummers toevoegen?")
+        st.write("Wil je dat iedereen nummers kan toevoegen?")
+        st.info("""
+        1. Open deze playlist in de **Spotify-app** op je telefoon of laptop.
+        2. Klik op het poppetje met het plusje (**'Samenwerkingsplaylist maken'**).
+        3. Kopieer die deellink en plak hem in de code bij 'spotify_playlist_url'. 
+        """)
+        st.link_button("🎶 Open Playlist in Spotify-App", spotify_playlist_url, type="primary", key="p7_spotify_isolated")
+
 
 
 # ==========================================
