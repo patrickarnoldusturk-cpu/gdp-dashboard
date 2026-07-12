@@ -12,7 +12,7 @@ st.write("Plan jullie festivalweekend 100% stabiel en crashvrij!")
 # 🔐 TEXT-CODE SYNCHRONISATIE (CRASHVRIJ)
 # ==========================================
 standaard_data = {
-    "vrienden": ["Patrick", "Annika", "Harland", "Richard", "Dirk", "Van Brakel"],
+    "vrienden": ["Patrick", "Annika", "Harland", "Richard", "Dirk", "Cindy Van Brakel"],
     "datums": {},
     "uitgaven": [],
     "timetable": {},
@@ -63,7 +63,7 @@ st.sidebar.header("📂 Menu Planner")
 gekozen_menu = st.sidebar.radio(
     "Ga naar:",
     ["🗓️ Welk Festival/Weekend?", "💶 Tickets & Spullen Kosten", "🎵 Timetable / Line-up", 
-     "🧳 Groeps-Paklijst", "🚗 Autoreis & Parkeren", "📸 Google Foto's", "🎵 Groeps-Playlist"],
+     "🧳 Groeps-Paklijst", "🚗 Autoreis & Parkeren", "📸 Google Foto's", "🎵 Groeps-Playlist", "🚀 Liquicity Info & Media"],
     key="sb_navigation_radio"
 )
 
@@ -329,3 +329,28 @@ if st.button("🔗 Genereer Nieuwe WhatsApp Code", key="generate_share_code_btn_
     deel_code = base64.b64encode(json_bytes).decode('utf-8')
     st.text_area("Kopieer deze code:", value=deel_code, height=100, key="bottom_share_code_textarea_isolated")
     st.success("Code succesvol gegenereerd!")
+
+# ==========================================
+# PAGINA 8: LIQUICITY INFO & MEDIA
+# ==========================================
+elif gekozen_menu == "🚀 Liquicity Info & Media":
+    st.header("🚀 Liquicity Info & Media")
+    st.write("Kom alvast helemaal in de sfeer met de officiële media en socials!")
+    
+    col1_media, col2_media = st.columns(2)
+    with col1_media:
+        st.subheader("🎬 Aftermovie 2025")
+        st.write("Bekijk hier de legendarische nafilm van vorig jaar:")
+        # Officiële Liquicity YouTube Aftermovie player
+        st.video("https://youtube.com")
+
+    with col2_media:
+        st.subheader("📱 Officiële Social Media")
+        st.write("Blijf op de hoogte van de laatste line-up updates en festivalnieuws:")
+        
+        # Grote, overzichtelijke knoppen naar alle officiële Liquicity kanalen
+        st.link_button("🌐 Officiële Website", "https://liquicity.com", type="secondary", use_container_width=True)
+        st.link_button("📸 Instagram", "https://instagram.com", type="secondary", use_container_width=True)
+        st.link_button("🎵 TikTok", "https://tiktok.com", type="secondary", use_container_width=True)
+        st.link_button("📺 YouTube Kanaal", "https://youtube.com", type="secondary", use_container_width=True)
+        st.link_button("💬 Facebook Community", "https://facebook.com", type="secondary", use_container_width=True)
