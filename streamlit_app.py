@@ -11,20 +11,22 @@ st.write("Plan jullie festivalweekend 100% stabiel en crashvrij!")
 # ==========================================
 # 🔐 TEXT-CODE SYNCHRONISATIE (CRASHVRIJ)
 # ==========================================
+standaard_data = {
+    "vrienden": ["Patrick", "Annika", "Harland", "Richard", "Dirk", "Van Brakel"],
+    "datums": {},
+    "uitgaven": [],
+    "timetable": {},
+    "paklijst": [
+        {"Item": "Partytent", "Wie": "Niemand", "Ingepakt": False},
+        {"Item": "Koelbox + Koelementen", "Wie": "Niemand", "Ingepakt": False},
+        {"Item": "Bluetooth Speaker", "Wie": "Niemand", "Ingepakt": False},
+        {"Item": "Ducttape", "Wie": "Niemand", "Ingepakt": False},
+        {"Item": "Kaartspel / Drankspellen", "Wie": "Niemand", "Ingepakt": False}
+    ]
+}
+
 if 'groeps_data' not in st.session_state:
-    st.session_state.groeps_data = {
-        "vrienden": ["Patrick", "Annika", "Harland", "Richard", "Dirk", "Van Brakel"],
-        "datums": {},
-        "uitgaven": [],
-        "timetable": {},
-        "paklijst": [
-            {"Item": "Partytent", "Wie": "Niemand", "Ingepakt": False},
-            {"Item": "Koelbox + Koelementen", "Wie": "Niemand", "Ingepakt": False},
-            {"Item": "Bluetooth Speaker", "Wie": "Niemand", "Ingepakt": False},
-            {"Item": "Ducttape", "Wie": "Niemand", "Ingepakt": False},
-            {"Item": "Kaartspel / Drankspellen", "Wie": "Niemand", "Ingepakt": False}
-        ]
-    }
+    st.session_state.groeps_data = standaard_data.copy()
 
 # --- SIDEBAR: DE UPDATER ---
 st.sidebar.header("🔄 Groeps-Update")
@@ -56,7 +58,6 @@ if st.sidebar.button("➕ Voeg mij toe", key="sb_add_person_btn"):
 
 st.sidebar.write("**Huidige groep:**", ", ".join(st.session_state.groeps_data["vrienden"]))
 
-# Directe variabele koppeling naar session state
 g_data = st.session_state.groeps_data
 
 # --- TABS ---
@@ -76,12 +77,16 @@ with tab1:
         opties = ["Volledig Liquicity Weekend 2026", "Alleen Vrijdag", "Alleen Zaterdag", "Alleen Zondag"]
         
         huidige_voorkeur = g_data["datums"].get(naam, [])
-        gekozen_datums = st.multiselect("Welke festivals/weekenden kun jij?", opties, default=huidige_voorkeur, key=f"tab1_dates_widget_{naam}")
         
-        if st.button("Voorkeur Opslaan", key="tab1_save_dates_btn"):
-            st.session_state.groeps_data["datums"][naam] = gekozen_datums
-            st.success("Voorkeur opgeslagen!")
-            st.rerun()
+        # FORM FIX: Ingepakt in een formulier zodat de multiselect niet live met de cloud praat
+        with st.form(key=f"form_dates_{naam}"):
+            gekozen_datums = st.multiselect("Welke festivals/weekenden kun jij?", opties, default=huidige_voorkeur, key=f"widget_dates_{naam}")
+            submit_dates = st.form_submit_button("Voorkeur Opslaan")
+            
+            if submit_dates:
+                st.session_state.groeps_data["datums"][naam] = gekozen_datums
+                st.success("Voorkeur opgeslagen!")
+                st.rerun()
             
     with col2:
         st.subheader("📊 Live Stemresultaten")
@@ -107,15 +112,19 @@ with tab2:
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Nieuwe festivaluitgave invoeren")
-        wie_betaalt = st.selectbox("Wie heeft betaald?", g_data["vrienden"], key="tab2_payer_selectbox")
-        bedrag = st.number_input("Bedrag (€)", min_value=0.0, step=0.01, value=0.0, key="tab2_amount_floatinput")
-        omschrijving = st.text_input("Waarvoor? (bijv. 'Combi-tickets', 'Campingboodschappen')", key="tab2_description_textinput")
         
-        if st.button("Uitgave Toevoegen", key="tab2_add_expense_btn"):
-            if bedrag > 0 and omschrijving:
-                st.session_state.groeps_data["uitgaven"].append({"Wie": wie_betaalt, "Bedrag": bedrag, "Omschrijving": omschrijving})
-                st.success("Uitgave toegevoegd!")
-                st.rerun()
+        # FORM FIX: Kosten invoeren via een beveiligd formulier
+        with st.form(key="form_add_expense"):
+            wie_betaalt = st.selectbox("Wie heeft betaald?", g_data["vrienden"], key="tab2_payer")
+            bedrag = st.number_input("Bedrag (€)", min_value=0.0, step=0.01, value=0.0, key="tab2_amount")
+            omschrijving = st.text_input("Waarvoor? (bijv. 'Combi-tickets')", key="tab2_descr")
+            submit_expense = st.form_submit_button("Uitgave Toevoegen")
+            
+            if submit_expense:
+                if bedrag > 0 and omschrijving:
+                    st.session_state.groeps_data["uitgaven"].append({"Wie": wie_betaalt, "Bedrag": bedrag, "Omschrijving": omschrijving})
+                    st.success("Uitgave toegevoegd!")
+                    st.rerun()
 
     with col2:
         st.subheader("📈 Tussenstand & Balans")
@@ -139,14 +148,18 @@ with tab2:
                 else:
                     st.write(f"⚪ **{persoon}** staat precies quitte.")
             st.write("---")
-            opties_verwijderen = [f"{i}: {u['Wie']} - €{u['Bedrag']} ({u['Omschrijving']})" for i, u in enumerate(g_data["uitgaven"])]
-            te_verwijderen = st.selectbox("Welke uitgave wil je wissen?", opties_verwijderen, key="tab2_delete_expense_selectbox")
             
-            if st.button("🔴 Geselecteerde uitgave wissen", key="tab2_delete_expense_btn"):
-                index_to_delete = int(te_verwijderen.split(":")[0])
-                st.session_state.groeps_data["uitgaven"].pop(index_to_delete)
-                st.success("Uitgave verwijderd!")
-                st.rerun()
+            # Verwijder-sectie ook in een klein formulier tegen crashes
+            with st.form(key="form_delete_expense"):
+                opties_verwijderen = [f"{i}: {u['Wie']} - €{u['Bedrag']} ({u['Omschrijving']})" for i, u in enumerate(g_data["uitgaven"])]
+                te_verwijderen = st.selectbox("Welke uitgave wil je wissen?", opties_verwijderen, key="tab2_del_select")
+                submit_delete = st.form_submit_button("🔴 Geselecteerde uitgave wissen")
+                
+                if submit_delete:
+                    index_to_delete = int(te_verwijderen.split(":"))
+                    st.session_state.groeps_data["uitgaven"].pop(index_to_delete)
+                    st.success("Uitgave verwijderd!")
+                    st.rerun()
         else:
             st.info("Nog geen groepsuitgaven ingevoerd.")
 # ==========================================
@@ -167,25 +180,28 @@ with tab3:
         st.subheader("🪐 Geef jouw 'Must-Sees' door")
         kiezende_vriend = st.selectbox("Wie ben je?", g_data["vrienden"], key="tab3_vriend_select")
         
-        # Geen on_change meer: we tekenen gewone checkboxes
-        for act in liquicity_acts:
-            a_naam = act["Artiest"]
-            al_gevinkt = kiezende_vriend in g_data["timetable"].get(a_naam, [])
-            st.checkbox(f"⏱️ {act['Tijd']} | **{a_naam}** ({act['Stage']})", value=al_gevinkt, key=f"tt_chk_{a_naam}_{kiezende_vriend}")
-            
-        if st.button("Mijn Line-up Voorkeuren Opslaan", type="primary", key="tab3_save_timetable_btn"):
+        # FORM FIX: Alle checkboxes bevriezen totdat er op de knop wordt gedrukt
+        with st.form(key=f"form_timetable_{kiezende_vriend}"):
             for act in liquicity_acts:
                 a_naam = act["Artiest"]
-                if a_naam not in st.session_state.groeps_data["timetable"]:
-                    st.session_state.groeps_data["timetable"][a_naam] = []
+                al_gevinkt = kiezende_vriend in g_data["timetable"].get(a_naam, [])
+                st.checkbox(f"⏱️ {act['Tijd']} | **{a_naam}** ({act['Stage']})", value=al_gevinkt, key=f"tt_chk_{a_naam}_{kiezende_vriend}")
                 
-                vinkje = st.session_state.get(f"tt_chk_{a_naam}_{kiezende_vriend}")
-                if vinkje and kiezende_vriend not in st.session_state.groeps_data["timetable"][a_naam]:
-                    st.session_state.groeps_data["timetable"][a_naam].append(kiezende_vriend)
-                elif not vinkje and kiezende_vriend in st.session_state.groeps_data["timetable"][a_naam]:
-                    st.session_state.groeps_data["timetable"][a_naam].remove(kiezende_vriend)
-            st.success("Timetable bijgewerkt!")
-            st.rerun()
+            submit_timetable = st.form_submit_button("Mijn Line-up Voorkeuren Opslaan", type="primary")
+            
+            if submit_timetable:
+                for act in liquicity_acts:
+                    a_naam = act["Artiest"]
+                    if a_naam not in st.session_state.groeps_data["timetable"]:
+                        st.session_state.groeps_data["timetable"][a_naam] = []
+                    
+                    vinkje = st.session_state.get(f"tt_chk_{a_naam}_{kiezende_vriend}")
+                    if vinkje and kiezende_vriend not in st.session_state.groeps_data["timetable"][a_naam]:
+                        st.session_state.groeps_data["timetable"][a_naam].append(kiezende_vriend)
+                    elif not vinkje and kiezende_vriend in st.session_state.groeps_data["timetable"][a_naam]:
+                        st.session_state.groeps_data["timetable"][a_naam].remove(kiezende_vriend)
+                st.success("Timetable bijgewerkt!")
+                st.rerun()
             
     with col2:
         st.subheader("📊 Wie staat waar? (Groepsoverzicht)")
@@ -206,23 +222,26 @@ with tab4:
     st.header("🧳 Wie takes what?")
     vrienden_lijst = ["Niemand"] + g_data["vrienden"]
     
-    # Geen on_change loops: we lezen de waardes pas uit als er op de knop wordt geklikt
-    for i, item in enumerate(g_data["paklijst"]):
-        col_a, col_b, col_c = st.columns(3)
-        with col_a: 
-            st.write(f"🔹 **{item['Item']}**")
-        with col_b: 
-            h_idx = vrienden_lijst.index(item['Wie']) if item['Wie'] in vrienden_lijst else 0
-            st.selectbox(f"Wie voor {item['Item']}?", vrienden_lijst, index=h_idx, key=f"pk_wie_select_{i}")
-        with col_c: 
-            st.checkbox(f"Ingepakt ({item['Item']})", value=item['Ingepakt'], key=f"pk_done_check_{i}")
-            
-    if st.button("💾 Sla Checklist Wijzigingen Op", key="tab4_save_packing_btn"):
-        for i in range(len(st.session_state.groeps_data["paklijst"])):
-            st.session_state.groeps_data["paklijst"][i]['Wie'] = st.session_state.get(f"pk_wie_select_{i}", "Niemand")
-            st.session_state.groeps_data["paklijst"][i]['Ingepakt'] = st.session_state.get(f"pk_done_check_{i}", False)
-        st.success("Paklijst succesvol bijgewerkt!")
-        st.rerun()
+    # FORM FIX: De complete paklijst-loop in een formulier plaatsen
+    with st.form(key="form_paklijst"):
+        for i, item in enumerate(g_data["paklijst"]):
+            col_a, col_b, col_c = st.columns(3)
+            with col_a: 
+                st.write(f"🔹 **{item['Item']}**")
+            with col_b: 
+                h_idx = vrienden_lijst.index(item['Wie']) if item['Wie'] in vrienden_lijst else 0
+                st.selectbox(f"Wie voor {item['Item']}?", vrienden_lijst, index=h_idx, key=f"pk_wie_select_{i}")
+            with col_c: 
+                st.checkbox(f"Ingepakt ({item['Item']})", value=item['Ingepakt'], key=f"pk_done_check_{i}")
+                
+        submit_packing = st.form_submit_button("💾 Sla Checklist Wijzigingen Op")
+        
+        if submit_packing:
+            for i in range(len(st.session_state.groeps_data["paklijst"])):
+                st.session_state.groeps_data["paklijst"][i]['Wie'] = st.session_state.get(f"pk_wie_select_{i}", "Niemand")
+                st.session_state.groeps_data["paklijst"][i]['Ingepakt'] = st.session_state.get(f"pk_done_check_{i}", False)
+            st.success("Paklijst succesvol bijgewerkt!")
+            st.rerun()
 # ==========================================
 # TABS 5 T/M 7: OVERIGE TOOLS & PLAYLIST
 # ==========================================
@@ -234,7 +253,7 @@ with tab5:
 with tab6:
     st.header("📸 Festival Foto's Verzamelen")
     st.write("Upload hier jullie vetste foto's en video's van het weekend!")
-    google_photos_url = "https://photos.google.com" 
+    google_photos_url = "https://google.com" 
     st.link_button("📂 Open Gedeeld Festival Album", google_photos_url, type="primary", key="tab6_photos_link_btn")
 
 with tab7:
@@ -247,7 +266,6 @@ with tab7:
     col1_sp, col2_sp = st.columns(2)
     with col1_sp:
         st.subheader("🔊 Live Luisteren")
-        # Dit bouwt de Spotify speler betrouwbaar in de app
         st.components.v1.iframe(embed_url, height=400, scrolling=False)
         
     with col2_sp:
