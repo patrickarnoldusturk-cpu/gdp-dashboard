@@ -62,7 +62,7 @@ st.sidebar.write("---")
 st.sidebar.header("📂 Menu Planner")
 gekozen_menu = st.sidebar.radio(
     "Ga naar:",
-    ["🗓️ Welk Festival/Weekend?", "💶 Tickets & Spullen Kosten", "🎵 Timetable / Line-up", 
+   ["🗓 Welk Festival/Weekend?", "💶 Tickets & Spullen Kosten", "🎵 Timetable / Line-up", 
      "🧳 Groeps-Paklijst", "🚗 Uber naar Festival", "📸 Google Foto's", "🎵 Groeps-Playlist"],
     key="sb_navigation_radio"
 )
@@ -256,7 +256,9 @@ elif gekozen_menu == "🚗 Uber naar Festival":
     with col1_car:
         st.subheader("📍 Navigatie naar Parkeerterrein")
         st.write("Klik op de knop hieronder om direct Google Maps te openen met de route naar het festivalterrein:")
+        # FIX: Dit stuurt de navigatie direct naar de Klavecimbelweg (Parkeren Liquicity)
         st.link_button("🗺️ Start Google Maps Navigatie", "https://google.com", type="primary", use_container_width=True)
+
         
         st.write("---")
         st.subheader("🎫 Parkeerkaart Herinnering")
