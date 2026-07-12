@@ -58,7 +58,6 @@ if st.sidebar.button("➕ Voeg mij toe", key="sb_add_person_btn"):
 
 st.sidebar.write("**Huidige groep:**", ", ".join(st.session_state.groeps_data["vrienden"]))
 
-# CRASH FIX: We vervangen st.tabs door een onfeilbaar selectiemenu in de sidebar
 st.sidebar.write("---")
 st.sidebar.header("📂 Menu Planner")
 gekozen_menu = st.sidebar.radio(
@@ -82,8 +81,9 @@ if gekozen_menu == "🗓️ Welk Festival/Weekend?":
         
         huidige_voorkeur = g_data["datums"].get(naam, [])
         
-        with st.form(key="form_dates_static"):
-            gekozen_datums = st.multiselect("Welke festivals/weekenden kun jij?", opties, default=huidige_voorkeur, key="widget_dates_static")
+        # CRASH FIX: We halen de dynamische key weg bij de widget en slaan pas op bij de submit
+        with st.form(key="form_dates_isolated"):
+            gekozen_datums = st.multiselect("Welke festivals/weekenden kun jij?", opties, default=huidige_voorkeur)
             submit_dates = st.form_submit_button("Voorkeur Opslaan")
             
             if submit_dates:
@@ -116,10 +116,10 @@ elif gekozen_menu == "💶 Tickets & Spullen Kosten":
     with col1:
         st.subheader("Nieuwe festivaluitgave invoeren")
         
-        with st.form(key="form_add_expense"):
-            wie_betaalt = st.selectbox("Wie heeft betaald?", g_data["vrienden"], key="p2_payer")
-            bedrag = st.number_input("Bedrag (€)", min_value=0.0, step=0.01, value=0.0, key="p2_amount")
-            omschrijving = st.text_input("Waarvoor? (bijv. 'Combi-tickets')", key="p2_descr")
+        with st.form(key="form_add_expense_isolated"):
+            wie_betaalt = st.selectbox("Wie heeft betaald?", g_data["vrienden"])
+            bedrag = st.number_input("Bedrag (€)", min_value=0.0, step=0.01, value=0.0)
+            omschrijving = st.text_input("Waarvoor? (bijv. 'Combi-tickets')")
             submit_expense = st.form_submit_button("Uitgave Toevoegen")
             
             if submit_expense:
@@ -151,9 +151,9 @@ elif gekozen_menu == "💶 Tickets & Spullen Kosten":
                     st.write(f"⚪ **{persoon}** staat precies quitte.")
             st.write("---")
             
-            with st.form(key="form_delete_expense"):
+            with st.form(key="form_delete_expense_isolated"):
                 opties_verwijderen = [f"{i}: {u['Wie']} - €{u['Bedrag']} ({u['Omschrijving']})" for i, u in enumerate(g_data["uitgaven"])]
-                te_verwijderen = st.selectbox("Welke uitgave wil je wissen?", opties_verwijderen, key="p2_del_select")
+                te_verwijderen = st.selectbox("Welke uitgave wil je wissen?", opties_verwijderen)
                 submit_delete = st.form_submit_button("🔴 Geselecteerde uitgave wissen")
                 
                 if submit_delete:
@@ -181,11 +181,13 @@ elif gekozen_menu == "🎵 Timetable / Line-up":
         st.subheader("🪐 Geef jouw 'Must-Sees' door")
         kiezende_vriend = st.selectbox("Wie ben je?", g_data["vrienden"], key="p3_vriend_select")
         
-        with st.form(key="form_timetable_static"):
+        # CRASH FIX: De checkboxes hebben nu een unieke, tijdelijke naam per act en slaan pas op bij submit
+        with st.form(key="form_timetable_isolated"):
+            tijdelijke_vinkjes = {}
             for act in liquicity_acts:
                 a_naam = act["Artiest"]
                 al_gevinkt = kiezende_vriend in g_data["timetable"].get(a_naam, [])
-                st.checkbox(f"⏱️ {act['Tijd']} | **{a_naam}** ({act['Stage']})", value=al_gevinkt, key=f"tt_chk_{a_naam}")
+                tijdelijke_vinkjes[a_naam] = st.checkbox(f"⏱️ {act['Tijd']} | **{a_naam}** ({act['Stage']})", value=al_gevinkt)
                 
             submit_timetable = st.form_submit_button("Mijn Line-up Voorkeuren Opslaan", type="primary")
             
@@ -195,7 +197,7 @@ elif gekozen_menu == "🎵 Timetable / Line-up":
                     if a_naam not in st.session_state.groeps_data["timetable"]:
                         st.session_state.groeps_data["timetable"][a_naam] = []
                     
-                    vinkje = st.session_state.get(f"tt_chk_{a_naam}")
+                    vinkje = tijdelijke_vinkjes[a_naam]
                     if vinkje and kiezende_vriend not in st.session_state.groeps_data["timetable"][a_naam]:
                         st.session_state.groeps_data["timetable"][a_naam].append(kiezende_vriend)
                     elif not vinkje and kiezende_vriend in st.session_state.groeps_data["timetable"][a_naam]:
@@ -222,23 +224,27 @@ elif gekozen_menu == "🧳 Groeps-Paklijst":
     st.header("🧳 Wie takes what?")
     vrienden_lijst = ["Niemand"] + g_data["vrienden"]
     
-    with st.form(key="form_paklijst"):
+    # CRASH FIX: Geen harde index-keys meer aan de widgets gekoppeld
+    with st.form(key="form_paklijst_isolated"):
+        tijdelijke_wie = []
+        tijdelijke_done = []
+        
         for i, item in enumerate(g_data["paklijst"]):
             col_a, col_b, col_c = st.columns(3)
             with col_a: 
                 st.write(f"🔹 **{item['Item']}**")
             with col_b: 
                 h_idx = vrienden_lijst.index(item['Wie']) if item['Wie'] in vrienden_lijst else 0
-                st.selectbox(f"Wie voor {item['Item']}?", vrienden_lijst, index=h_idx, key=f"pk_wie_select_{i}")
+                tijdelijke_wie.append(st.selectbox(f"Wie voor {item['Item']}?", vrienden_lijst, index=h_idx))
             with col_c: 
-                st.checkbox(f"Ingepakt ({item['Item']})", value=item['Ingepakt'], key=f"pk_done_check_{i}")
+                tijdelijke_done.append(st.checkbox(f"Ingepakt ({item['Item']})", value=item['Ingepakt']))
                 
         submit_packing = st.form_submit_button("💾 Sla Checklist Wijzigingen Op")
         
         if submit_packing:
             for i in range(len(st.session_state.groeps_data["paklijst"])):
-                st.session_state.groeps_data["paklijst"][i]['Wie'] = st.session_state.get(f"pk_wie_select_{i}", "Niemand")
-                st.session_state.groeps_data["paklijst"][i]['Ingepakt'] = st.session_state.get(f"pk_done_check_{i}", False)
+                st.session_state.groeps_data["paklijst"][i]['Wie'] = tijdelijke_wie[i]
+                st.session_state.groeps_data["paklijst"][i]['Ingepakt'] = tijdelijke_done[i]
             st.success("Paklijst succesvol bijgewerkt!")
             st.rerun()
 # ==========================================
@@ -247,13 +253,13 @@ elif gekozen_menu == "🧳 Groeps-Paklijst":
 elif gekozen_menu == "🚗 Uber naar Festival":
     st.header("🚗 Snel een Uber naar het Festival")
     st.write("Klik op de knop om direct een rit te plannen naar het festivalterrein.")
-    st.link_button("🚖 Open Uber & Bestel Rit", "https://uber.com", type="primary", key="p5_uber")
+    st.link_button("🚖 Open Uber & Bestel Rit", "https://uber.com", type="primary", key="p5_uber_isolated")
 
 elif gekozen_menu == "📸 Google Foto's":
     st.header("📸 Festival Foto's Verzamelen")
     st.write("Upload hier jullie vetste foto's en video's van het weekend!")
     google_photos_url = "https://google.com" 
-    st.link_button("📂 Open Gedeeld Festival Album", google_photos_url, type="primary", key="p6_photos")
+    st.link_button("📂 Open Gedeeld Festival Album", google_photos_url, type="primary", key="p6_photos_isolated")
 
 elif gekozen_menu == "🎵 Groeps-Playlist":
     st.header("🎵 Onze Gezamenlijke Liquicity Playlist")
@@ -275,7 +281,7 @@ elif gekozen_menu == "🎵 Groeps-Playlist":
         2. Klik op het poppetje met het plusje (**'Samenwerkingsplaylist maken'**).
         3. Kopieer die deellink en plak hem in de code bij 'spotify_playlist_url'. 
         """)
-        st.link_button("🎶 Open Playlist in Spotify", spotify_playlist_url, type="primary", key="p7_spotify")
+        st.link_button("🎶 Open Playlist in Spotify", spotify_playlist_url, type="primary", key="p7_spotify_isolated")
 
 # ==========================================
 # 📋 GENERATOR ONDERIN VOOR DE DEELLINK
@@ -284,8 +290,8 @@ st.write("---")
 st.subheader("📋 De Actuele Groeps-Deelcode")
 st.write("Klik op de knop hieronder om de nieuwste code voor WhatsApp te genereren.")
 
-if st.button("🔗 Genereer Nieuwe WhatsApp Code", key="generate_share_code_btn"):
+if st.button("🔗 Genereer Nieuwe WhatsApp Code", key="generate_share_code_btn_isolated"):
     json_bytes = json.dumps(g_data).encode('utf-8')
     deel_code = base64.b64encode(json_bytes).decode('utf-8')
-    st.text_area("Kopieer deze code:", value=deel_code, height=100, key="bottom_share_code_textarea")
-    st.success("Code succesvol gegenereerd! Kopieer de tekst hierboven.")
+    st.text_area("Kopieer deze code:", value=deel_code, height=100, key="bottom_share_code_textarea_isolated")
+    st.success("Code succesvol gegenereerd!")
