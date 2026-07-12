@@ -28,7 +28,7 @@ standaard_data = {
 if 'groeps_data' not in st.session_state:
     st.session_state.groeps_data = standaard_data.copy()
 
-# --- SIDEBAR: DE UPDATER ---
+# --- SIDEBAR: DE UPDATER & NAVIGATIE ---
 st.sidebar.header("🔄 Groeps-Update")
 import_code = st.sidebar.text_area("Plak hier de nieuwste code van de WhatsApp-groep:", key="sb_import_code_input")
 
@@ -58,22 +58,26 @@ if st.sidebar.button("➕ Voeg mij toe", key="sb_add_person_btn"):
 
 st.sidebar.write("**Huidige groep:**", ", ".join(st.session_state.groeps_data["vrienden"]))
 
-g_data = st.session_state.groeps_data
+# CRASH FIX: We vervangen st.tabs door een onfeilbaar selectiemenu in de sidebar
+st.sidebar.write("---")
+st.sidebar.header("📂 Menu Planner")
+gekozen_menu = st.sidebar.radio(
+    "Ga naar:",
+    ["🗓️ Welk Festival/Weekend?", "💶 Tickets & Spullen Kosten", "🎵 Timetable / Line-up", 
+     "🧳 Groeps-Paklijst", "🚗 Uber naar Festival", "📸 Google Foto's", "🎵 Groeps-Playlist"],
+    key="sb_navigation_radio"
+)
 
-# --- TABS ---
-tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-    "🗓️ Welk Festival/Weekend?", "💶 Tickets & Spullen Kosten", "🎵 Timetable / Line-up", 
-    "🧳 Groeps-Paklijst", "🚗 Uber naar Festival", "📸 Google Foto's", "🎵 Groeps-Playlist"
-])
+g_data = st.session_state.groeps_data
 # ==========================================
-# TAB 1: DATUMS / FESTIVALS PRIKKEN
+# PAGINA 1: DATUMS / FESTIVALS PRIKKEN
 # ==========================================
-with tab1:
+if gekozen_menu == "🗓️ Welk Festival/Weekend?":
     st.header("Welk festival weekend gaan we pakken?")
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Jouw voorkeur doorgeven")
-        naam = st.selectbox("Wie ben je?", g_data["vrienden"], key="tab1_user_selectbox")
+        naam = st.selectbox("Wie ben je?", g_data["vrienden"], key="p1_user_selectbox")
         opties = ["Volledig Liquicity Weekend 2026", "Alleen Vrijdag", "Alleen Zaterdag", "Alleen Zondag"]
         
         huidige_voorkeur = g_data["datums"].get(naam, [])
@@ -104,18 +108,18 @@ with tab1:
             st.info("Nog geen stemmen uitgebracht.")
 
 # ==========================================
-# TAB 2: KOSTEN VERREKENEN
+# PAGINA 2: KOSTEN VERREKENEN
 # ==========================================
-with tab2:
+elif gekozen_menu == "💶 Tickets & Spullen Kosten":
     st.header("💶 Festival Pot (Tickets, Drank, Muntjes)")
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Nieuwe festivaluitgave invoeren")
         
         with st.form(key="form_add_expense"):
-            wie_betaalt = st.selectbox("Wie heeft betaald?", g_data["vrienden"], key="tab2_payer")
-            bedrag = st.number_input("Bedrag (€)", min_value=0.0, step=0.01, value=0.0, key="tab2_amount")
-            omschrijving = st.text_input("Waarvoor? (bijv. 'Combi-tickets')", key="tab2_descr")
+            wie_betaalt = st.selectbox("Wie heeft betaald?", g_data["vrienden"], key="p2_payer")
+            bedrag = st.number_input("Bedrag (€)", min_value=0.0, step=0.01, value=0.0, key="p2_amount")
+            omschrijving = st.text_input("Waarvoor? (bijv. 'Combi-tickets')", key="p2_descr")
             submit_expense = st.form_submit_button("Uitgave Toevoegen")
             
             if submit_expense:
@@ -149,7 +153,7 @@ with tab2:
             
             with st.form(key="form_delete_expense"):
                 opties_verwijderen = [f"{i}: {u['Wie']} - €{u['Bedrag']} ({u['Omschrijving']})" for i, u in enumerate(g_data["uitgaven"])]
-                te_verwijderen = st.selectbox("Welke uitgave wil je wissen?", opties_verwijderen, key="tab2_del_select")
+                te_verwijderen = st.selectbox("Welke uitgave wil je wissen?", opties_verwijderen, key="p2_del_select")
                 submit_delete = st.form_submit_button("🔴 Geselecteerde uitgave wissen")
                 
                 if submit_delete:
@@ -160,9 +164,9 @@ with tab2:
         else:
             st.info("Nog geen groepsuitgaven ingevoerd.")
 # ==========================================
-# TAB 3: TIMETABLE / LINE-UP
+# PAGINA 3: TIMETABLE / LINE-UP
 # ==========================================
-with tab3:
+elif gekozen_menu == "🎵 Timetable / Line-up":
     st.header("🎵 Liquicity 2026 Groeps-Timetable")
     liquicity_acts = [
         {"Dag": "Vrijdag", "Tijd": "21:30 - 23:00", "Artiest": "Netsky", "Stage": "Galaxy"},
@@ -175,7 +179,7 @@ with tab3:
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("🪐 Geef jouw 'Must-Sees' door")
-        kiezende_vriend = st.selectbox("Wie ben je?", g_data["vrienden"], key="tab3_vriend_select")
+        kiezende_vriend = st.selectbox("Wie ben je?", g_data["vrienden"], key="p3_vriend_select")
         
         with st.form(key="form_timetable_static"):
             for act in liquicity_acts:
@@ -212,9 +216,9 @@ with tab3:
         st.dataframe(pd.DataFrame(timetable_data), use_container_width=True, hide_index=True)
 
 # ==========================================
-# TAB 4: GROEPS-PAKLIJST
+# PAGINA 4: GROEPS-PAKLIJST
 # ==========================================
-with tab4:
+elif gekozen_menu == "🧳 Groeps-Paklijst":
     st.header("🧳 Wie takes what?")
     vrienden_lijst = ["Niemand"] + g_data["vrienden"]
     
@@ -238,20 +242,20 @@ with tab4:
             st.success("Paklijst succesvol bijgewerkt!")
             st.rerun()
 # ==========================================
-# TABS 5 T/M 7: OVERIGE TOOLS & PLAYLIST
+# PAGINA 5 T/M 7: OVERIGE TOOLS & PLAYLIST
 # ==========================================
-with tab5:
+elif gekozen_menu == "🚗 Uber naar Festival":
     st.header("🚗 Snel een Uber naar het Festival")
     st.write("Klik op de knop om direct een rit te plannen naar het festivalterrein.")
-    st.link_button("🚖 Open Uber & Bestel Rit", "https://uber.com", type="primary", key="tab5_uber_link_btn")
+    st.link_button("🚖 Open Uber & Bestel Rit", "https://uber.com", type="primary", key="p5_uber")
 
-with tab6:
+elif gekozen_menu == "📸 Google Foto's":
     st.header("📸 Festival Foto's Verzamelen")
     st.write("Upload hier jullie vetste foto's en video's van het weekend!")
     google_photos_url = "https://google.com" 
-    st.link_button("📂 Open Gedeeld Festival Album", google_photos_url, type="primary", key="tab6_photos_link_btn")
+    st.link_button("📂 Open Gedeeld Festival Album", google_photos_url, type="primary", key="p6_photos")
 
-with tab7:
+elif gekozen_menu == "🎵 Groeps-Playlist":
     st.header("🎵 Onze Gezamenlijke Liquicity Playlist")
     st.write("Luister direct naar de playlist of voeg zelf je favoriete Drum & Bass tracks toe!")
     
@@ -269,18 +273,17 @@ with tab7:
         st.info("""
         1. Open deze playlist in de **Spotify-app** op je telefoon of laptop.
         2. Klik op het poppetje met het plusje (**'Samenwerkingsplaylist maken'**).
-        3. Kopieer die specifieke deellink und plak hem in de code bij 'spotify_playlist_url'. 
+        3. Kopieer die deellink en plak hem in de code bij 'spotify_playlist_url'. 
         """)
-        st.link_button("🎶 Open Playlist in Spotify", spotify_playlist_url, type="primary", key="tab7_unique_spotify_action_btn")
+        st.link_button("🎶 Open Playlist in Spotify", spotify_playlist_url, type="primary", key="p7_spotify")
 
 # ==========================================
-# 📋 GENERATOR ONDERIN VOOR DE DEELLINK (RAM-FIX)
+# 📋 GENERATOR ONDERIN VOOR DE DEELLINK
 # ==========================================
 st.write("---")
 st.subheader("📋 De Actuele Groeps-Deelcode")
-st.write("Om serveroverbelasting te voorkomen, klik je op de knop hieronder om de nieuwste code voor WhatsApp te genereren.")
+st.write("Klik op de knop hieronder om de nieuwste code voor WhatsApp te genereren.")
 
-# SERVER RAM FIX: De code wordt nu pas berekend als je expliciet op de knop klikt!
 if st.button("🔗 Genereer Nieuwe WhatsApp Code", key="generate_share_code_btn"):
     json_bytes = json.dumps(g_data).encode('utf-8')
     deel_code = base64.b64encode(json_bytes).decode('utf-8')
