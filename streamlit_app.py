@@ -236,26 +236,26 @@ with tab7:
     # De link naar de openbare/samenwerkings-playlist voor de knop
     spotify_playlist_url = "https://spotify.com" 
     
-    # BUGFIX: We zetten hier direct jouw exacte playlist-ID (2xjqPMtbmhpsS1QAzwnkYs) in de speler zonder ingewikkelde berekeningen
+    # De officiële embed URL voor de ingebouwde player
     embed_url = "https://spotify.com"
     
     col1_sp, col2_sp = st.columns(2)
     with col1_sp:
         st.subheader("🔊 Live Luisteren")
-        st.components.v1.html(
-            f"""
-            <iframe src="{embed_url}" 
-                    width="100%" 
-                    height="400" 
-                    frameborder="0" 
-                    allowfullscreen="" 
-                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
-                    sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
-                    loading="lazy">
-            </iframe>
-            """,
-            height=420
-        )
+        # FIX: We gebruiken Streamlit's eigen iframe component zonder de 'sandbox' string. 
+        # Omdat de player nu in een kolom staat, blijft hij stabiel en laadt Spotify direct.
+        st.components.v1.iframe(embed_url, height=400, scrolling=False)
+        
+    with col2_sp:
+        st.subheader("➕ Nummers toevoegen?")
+        st.write("Wil je dat iedereen nummers kan toevoegen?")
+        st.info("""
+        1. Open deze playlist in de **Spotify-app** op je telefoon of laptop.
+        2. Klik op het poppetje met het plusje (**'Samenwerkingsplaylist maken'**).
+        3. Kopieer die specifieke deellink en plak hem in de code bij 'spotify_playlist_url'. 
+        """)
+        st.link_button("🎶 Open Playlist in Spotify", spotify_playlist_url, type="primary", key="tab7_spotify_link")
+
         
     with col2_sp:
         st.subheader("➕ Nummers toevoegen?")
