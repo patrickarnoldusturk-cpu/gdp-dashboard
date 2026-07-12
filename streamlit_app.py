@@ -216,7 +216,7 @@ with tab4:
         st.success("Paklijst lokaal bijgewerkt!")
         st.rerun()
 # ==========================================
-# TABS 5 T/M 7: OVERIGE TOOLS & PLAYLIST
+# TABS 5 T/M 7: OVERIGE TOOLS & PLAYLIST (GEFIXT)
 # ==========================================
 with tab5:
     st.header("🚗 Snel een Uber naar het Festival")
@@ -233,15 +233,11 @@ with tab7:
     st.header("🎵 Onze Gezamenlijke Liquicity Playlist")
     st.write("Luister direct naar de playlist of voeg zelf je favoriete Drum & Bass tracks toe!")
     
+    # De link naar de openbare/samenwerkings-playlist voor de knop
     spotify_playlist_url = "https://spotify.com" 
     
-    match = re.search(r'playlist/([a-zA-Z0-9]{22})', spotify_playlist_url)
-    if match:
-        playlist_id = match.group(1)
-    else:
-        playlist_id = "2xjqPMtbmhpsS1QAzwnkYs"
-        
-    embed_url = f"https://spotify.com{playlist_id}?utm_source=generator&theme=0"
+    # BUGFIX: We zetten hier direct jouw exacte playlist-ID (2xjqPMtbmhpsS1QAzwnkYs) in de speler zonder ingewikkelde berekeningen
+    embed_url = "https://spotify.com"
     
     col1_sp, col2_sp = st.columns(2)
     with col1_sp:
