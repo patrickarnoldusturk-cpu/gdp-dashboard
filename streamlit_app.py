@@ -248,6 +248,15 @@ elif gekozen_menu == "🧳 Groeps-Paklijst":
             st.success("Paklijst succesvol bijgewerkt!")
             st.rerun()
 
+elif gekozen_menu == "📸 Google Foto's":
+    st.header("📸 Festival Foto's Verzamelen")
+    st.write("Upload hier jullie vetste foto's en video's van het weekend!")
+    
+    # JULLIE EIGEN COOPERATIEVE GOOGLE PHOTOS LINK:
+    google_photos_url = "https://photos.app.goo.gl/Pj9jGsFVBwinwq358"
+    
+    st.link_button("📂 Open Gedeeld Festival Album", google_photos_url, type="primary", key="p6_photos_isolated")
+
 elif gekozen_menu == "🎵 Groeps-Playlist":
     st.header("🎵 Onze Gezamenlijke Liquicity Playlist")
     st.write("Luister direct naar de playlist of voeg zelf je favoriete Drum & Bass tracks toe!")
