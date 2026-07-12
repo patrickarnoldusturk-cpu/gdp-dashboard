@@ -62,16 +62,17 @@ st.sidebar.header("📂 Menu Planner")
 
 gekozen_menu = st.sidebar.radio(
     "Ga naar:",
-    ["🗓️ Welk Festival/Weekend?", "💶 Tickets & Spullen Kosten", "🎵 Timetable / Line-up", 
+    ["👨‍🚀 Liquicity weekend", "💶 Tickets & Spullen Kosten", "🎵 Timetable / Line-up", 
      "🧳 Groeps-Paklijst", "🚗 Autoreis & Parkeren", "📸 Google Foto's", "🎵 Groeps-Playlist", "🚀 Liquicity Info & Media"],
     key="sb_navigation_radio"
 )
+
 
 g_data = st.session_state.groeps_data
 # ==========================================
 # PAGINA 1: DATUMS / FESTIVALS PRIKKEN
 # ==========================================
-if gekozen_menu == "🗓️ Welk Festival/Weekend?":
+if gekozen_menu == "👨‍🚀 Liquicity weekend":
     st.header("Welk festival weekend gaan we pakken?")
     col1, col2 = st.columns(2)
     with col1:
