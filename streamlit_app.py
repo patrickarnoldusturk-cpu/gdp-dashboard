@@ -218,7 +218,7 @@ with tab4:
         st.success("Paklijst lokaal bijgewerkt!")
         st.rerun()
 # ==========================================
-# TAB 5 T/M 7: OVERIGE TOOLS & MEDIA
+# TAB 5 T/M 6: OVERIGE TOOLS & MEDIA
 # ==========================================
 with tab5:
     st.header("🚗 Snel een Uber naar het Festival")
@@ -232,15 +232,55 @@ with tab6:
     google_photos_url = "https://google.com" 
     st.link_button("📂 Open Gedeeld Festival Album", google_photos_url, type="primary")
 
+# ==========================================
+# TAB 7: SPOTIFY GROEPS-PLAYLIST
+# ==========================================
 with tab7:
     st.header("🎵 Onze Gezamenlijke Liquicity Playlist")
-    st.write("Kom alvast in de sfeer met de lekkerste Drum & Bass tracks van Patrick's lijst:")
+    st.write("Luister direct naar de playlist of voeg zelf je favoriete Drum & Bass tracks toe!")
     
-    # De directe embed-link naar jouw playlist
-    spotify_embed_url = "https://spotify.com"
+    # Jouw eigen link
+    spotify_playlist_url = "https://open.spotify.com/playlist/2xjqPMtbmhpsS1QAzwnkYs?si=c4aad32c934f4349&pt=ee26a639c0facc55f723cbfd8d11178e" 
     
-    # Dit laadt de speler via Streamlit's eigen component, zonder pop-ups en zonder blokkades
-    st.video(spotify_embed_url)
+    # Kogelvrije methode om de unieke playlist-ID van 22 tekens te pakken
+    import re
+    match = re.search(r'playlist/([a-zA-Z0-9]{22})', spotify_playlist_url)
+    if match:
+        playlist_id = match.group(1)
+    else:
+        playlist_id = "2xjqPMtbmhpsS1QAzwnkYs"
+        
+    embed_url = f"https://open.spotify.com/embed/playlist/{playlist_id}?utm_source=generator&theme=0"
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("🔊 Live Luisteren")
+        # html component met sandbox voorkomt de pop-up op de live website, 
+        # terwijl de st.columns lay-out zorgt dat de speler niet te breed wordt!
+        st.components.v1.html(
+            f"""
+            <iframe src="{embed_url}" 
+                    width="100%" 
+                    height="400" 
+                    frameborder="0" 
+                    allowfullscreen="" 
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+                    sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
+                    loading="lazy">
+            </iframe>
+            """,
+            height=420
+        )
+        
+    with col2:
+        st.subheader("➕ Nummers toevoegen?")
+        st.write("Wil je dat iedereen nummers kan toevoegen?")
+        st.info("""
+        1. Open deze playlist in de **Spotify-app** op je telefoon of laptop.
+        2. Klik op het poppetje met het plusje (**'Samenwerkingsplaylist maken'** of 'Collaborative playlist').
+        3. Kopieer die specifieke deellink en plak hem in de code van festival.py bij 'spotify_playlist_url'. 
+        """)
+        st.link_button("🎶 Open Playlist in Spotify", spotify_playlist_url, type="primary")
 
 # ==========================================
 # 📋 GENERATOR ONDERIN VOOR DE DEELLINK
