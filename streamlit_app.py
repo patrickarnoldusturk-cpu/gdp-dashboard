@@ -78,9 +78,9 @@ with tab1:
         
         huidige_voorkeur = g_data["datums"].get(naam, [])
         
-        # FORM FIX: Ingepakt in een formulier zodat de multiselect niet live met de cloud praat
-        with st.form(key=f"form_dates_{naam}"):
-            gekozen_datums = st.multiselect("Welke festivals/weekenden kun jij?", opties, default=huidige_voorkeur, key=f"widget_dates_{naam}")
+        # FIX: We gebruiken nu een vaste, statische key voor het formulier om ID-mismatches te voorkomen
+        with st.form(key="form_dates_static"):
+            gekozen_datums = st.multiselect("Welke festivals/weekenden kun jij?", opties, default=huidige_voorkeur, key="widget_dates_static")
             submit_dates = st.form_submit_button("Voorkeur Opslaan")
             
             if submit_dates:
@@ -113,7 +113,6 @@ with tab2:
     with col1:
         st.subheader("Nieuwe festivaluitgave invoeren")
         
-        # FORM FIX: Kosten invoeren via een beveiligd formulier
         with st.form(key="form_add_expense"):
             wie_betaalt = st.selectbox("Wie heeft betaald?", g_data["vrienden"], key="tab2_payer")
             bedrag = st.number_input("Bedrag (€)", min_value=0.0, step=0.01, value=0.0, key="tab2_amount")
@@ -149,7 +148,6 @@ with tab2:
                     st.write(f"⚪ **{persoon}** staat precies quitte.")
             st.write("---")
             
-            # Verwijder-sectie ook in een klein formulier tegen crashes
             with st.form(key="form_delete_expense"):
                 opties_verwijderen = [f"{i}: {u['Wie']} - €{u['Bedrag']} ({u['Omschrijving']})" for i, u in enumerate(g_data["uitgaven"])]
                 te_verwijderen = st.selectbox("Welke uitgave wil je wissen?", opties_verwijderen, key="tab2_del_select")
@@ -180,12 +178,12 @@ with tab3:
         st.subheader("🪐 Geef jouw 'Must-Sees' door")
         kiezende_vriend = st.selectbox("Wie ben je?", g_data["vrienden"], key="tab3_vriend_select")
         
-        # FORM FIX: Alle checkboxes bevriezen totdat er op de knop wordt gedrukt
-        with st.form(key=f"form_timetable_{kiezende_vriend}"):
+        # FIX: Formulier key is nu statisch gemaakt zodat de cloud server niet struikelt bij een wissel van naam
+        with st.form(key="form_timetable_static"):
             for act in liquicity_acts:
                 a_naam = act["Artiest"]
                 al_gevinkt = kiezende_vriend in g_data["timetable"].get(a_naam, [])
-                st.checkbox(f"⏱️ {act['Tijd']} | **{a_naam}** ({act['Stage']})", value=al_gevinkt, key=f"tt_chk_{a_naam}_{kiezende_vriend}")
+                st.checkbox(f"⏱️ {act['Tijd']} | **{a_naam}** ({act['Stage']})", value=al_gevinkt, key=f"tt_chk_{a_naam}")
                 
             submit_timetable = st.form_submit_button("Mijn Line-up Voorkeuren Opslaan", type="primary")
             
@@ -195,7 +193,7 @@ with tab3:
                     if a_naam not in st.session_state.groeps_data["timetable"]:
                         st.session_state.groeps_data["timetable"][a_naam] = []
                     
-                    vinkje = st.session_state.get(f"tt_chk_{a_naam}_{kiezende_vriend}")
+                    vinkje = st.session_state.get(f"tt_chk_{a_naam}")
                     if vinkje and kiezende_vriend not in st.session_state.groeps_data["timetable"][a_naam]:
                         st.session_state.groeps_data["timetable"][a_naam].append(kiezende_vriend)
                     elif not vinkje and kiezende_vriend in st.session_state.groeps_data["timetable"][a_naam]:
@@ -222,7 +220,6 @@ with tab4:
     st.header("🧳 Wie takes what?")
     vrienden_lijst = ["Niemand"] + g_data["vrienden"]
     
-    # FORM FIX: De complete paklijst-loop in een formulier plaatsen
     with st.form(key="form_paklijst"):
         for i, item in enumerate(g_data["paklijst"]):
             col_a, col_b, col_c = st.columns(3)
@@ -253,7 +250,7 @@ with tab5:
 with tab6:
     st.header("📸 Festival Foto's Verzamelen")
     st.write("Upload hier jullie vetste foto's en video's van het weekend!")
-    google_photos_url = "https://google.com" 
+    google_photos_url = "https://photos.google.com" 
     st.link_button("📂 Open Gedeeld Festival Album", google_photos_url, type="primary", key="tab6_photos_link_btn")
 
 with tab7:
